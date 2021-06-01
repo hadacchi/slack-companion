@@ -24,11 +24,16 @@ slack_user_token = config['socket-mode']['user_oauth_access_token']
 # bot user = garie, this token only grant as garie to bot
 slack_bot_token = config['socket-mode']['bot_user_oauth_access_token']
 
+# this is keyword when this bot mentioned
+client = WebClient(token=slack_bot_token)
+bot_user_id = client.auth_test()['user_id']
+del client
+
 
 app = App(token=slack_bot_token)
 
 # イベント API
-@app.message(re.compile('clear(.*)'))
+@app.message(re.compile('^clear ([^ ]*)$'))
 def handle_message_events(message, say, logger, context):
     '''clear all histories
     '''
@@ -73,6 +78,28 @@ def handle_message_events(message, say, logger, context):
 
     if respond is not None:
         say(respond)
+
+@app.message(re.compile(f'<@{bot_user_id}> *([W|w]here)'))
+def return_joining_channels(say, logger, context):
+    '''return channels where gariechan joins
+    '''
+
+    client = WebClient(token=slack_bot_token)
+
+    # if you want only channels, ch['is_channel'] will be good filter
+
+    channels = []
+
+    for ch in client.conversations_list()['channels']:
+        members = client.conversations_members(channel=ch['id'])['members']
+        if bot_user_id in members:
+            channels.append(ch['name'])
+    if len(channels)>1:
+        say('\n'.join(channels))
+    elif len(channels) == 1:
+        say(channels[0])
+    else:
+        say('No')
 
 @app.event('message')
 def nop(message, logger):
