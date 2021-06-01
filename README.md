@@ -2,6 +2,12 @@
 
 slack上のメッセージを見て，コマンドを解釈し，実行するbot
 
+## How to Use
+
+1. `@BOTNAME clear 10` で発言した channel の発言を最新10件削除
+1. `@BOTNAME clear all` で発言した channel の発言を全件削除
+1. `@BOTNAME where` で BOT の参加する channel list を返却
+
 ## Manual
 
 ### 1. アプリの作成
@@ -53,14 +59,13 @@ slack上のメッセージを見て，コマンドを解釈し，実行するbot
 2. `docker-compose up -d` で実行
 3. log は docker-compose logs で確認
 
-### 3. bot を動作させたい channel に参加させる
+### 3. bot を動作させたい channel に参加/除名させる
 
-1. slack のワークスペースに接続して，Apps から bot user を選択
-2. 右上の i マーク -> More -> Add this app to a channel ...
-    1. 参加させたい channel を選択して Add
-3. 動作確認
-    1. bot を追加したchannel で `clear 1` と発言する
-    2. bot が応答メッセージを発言したあと，`clear 1` の発言だけ削除して，bot が完了メッセージを発言する
+1. slack のワークスペースに接続して，参加させたい ch で `/invite @BOTNAME` の形式で BOT の名前を入れたらOK  
+   除名させたい場合は，その ch で `/kick @BOTNAME`
+2. 動作確認
+    1. bot を追加したchannel で `@BOTNAME clear 1` と発言する
+    2. bot が応答メッセージを発言したあと，`@BOTNAME clear 1` の発言だけ削除して，bot が完了メッセージを発言する
     3. 以上の動作を確認できれば完了  
        だめなら頑張れ
 
@@ -70,20 +75,19 @@ slack上のメッセージを見て，コマンドを解釈し，実行するbot
 
 - 古い順にN件削除
     - oldestで何とかなりそうだが，以前のAPIだとcountに上限があったので，その場合は前から探索していかないとoldestが見付けられないかも知れない
-- 参加チャネルの出力
-    - アプリをchに追加する場合，membersに表示されないのでどのchにアプリが参加しているかわからない
-        - 参加しているch名のリストを/コマンドへのリアクションか，where are youへの回答で出力させる
 - Pending
     - OAuth認証
         - アプリで配信しないので，いらないか…?
         - 各自，コードをデプロイして使ってくれ
-    - bug fix
-        - 完了メッセージが1回だけ出るように修正する
-            - 実害はないし，後回し
 - Finished
     - 常駐
         - Finished. I use Bolt for Python.
         - Finished. I use docker container. -> デーモンぽく動作するように起動スクリプトと終了スクリプトを作る
+    - bug fix
+        - 完了メッセージが1回だけ出るように修正する
+    - 参加チャネルの出力
+        - アプリをchに追加する場合，membersに表示されないのでどのchにアプリが参加しているかわからない
+            - 参加しているch名のリストを/コマンドへのリアクションか，where are youへの回答で出力させる
 
 
 ## 注意

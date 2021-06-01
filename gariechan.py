@@ -33,7 +33,7 @@ del client
 app = App(token=slack_bot_token)
 
 # イベント API
-@app.message(re.compile('^clear ([^ ]*)$'))
+@app.message(re.compile(f'<@{bot_user_id}> *clear *([^ ]*)$'))
 def handle_message_events(message, say, logger, context):
     '''clear all histories
     '''
@@ -41,7 +41,7 @@ def handle_message_events(message, say, logger, context):
     matches = context['matches'][0]
     if matches == '':
         count = 100
-    elif matches == ' all':
+    elif matches == 'all':
         count = 99999999
     elif matches[1:].isnumeric():
         count = int(matches)
@@ -49,6 +49,7 @@ def handle_message_events(message, say, logger, context):
         logging.error('Invalid number {matches}')
         say(msgs.error())
         return
+    say(msgs.confirm())
 
     client = WebClient(token=slack_user_token)
 
@@ -59,24 +60,27 @@ def handle_message_events(message, say, logger, context):
         limit = min(count,100)
         respond, msg_list, has_more = msgp.get_history( message['channel']
                                                     , client
+                                                    , say
                                                     , logger
                                                     , latest=ts
                                                     , limit=limit
                                                     )
-        say(respond)
+        if respond is None:
+            break
 
         respond = msgp.clear_history( message['channel']
                                     , msg_list
                                     , client
                                     , logger
                                     )
-        say(respond)
         count -= len(msg_list)
+
         if has_more:
             continue
         break
 
     if respond is not None:
+        # last respond is output
         say(respond)
 
 @app.message(re.compile(f'<@{bot_user_id}> *([W|w]here)'))
@@ -94,12 +98,10 @@ def return_joining_channels(say, logger, context):
         members = client.conversations_members(channel=ch['id'])['members']
         if bot_user_id in members:
             channels.append(ch['name'])
-    if len(channels)>1:
-        say('\n'.join(channels))
-    elif len(channels) == 1:
-        say(channels[0])
+    if len(channels)>0:
+        say(msgs.imin().format('\n'.join(channels)))
     else:
-        say('No')
+        say(msgs.noplace())
 
 @app.event('message')
 def nop(message, logger):

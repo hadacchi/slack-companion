@@ -22,7 +22,7 @@ def clear_history(ch, msg_list, client, logger=None):
     logger.info(f'{i+1} messages were deleted')
     return msgs.finish()
 
-def get_history(ch, client, logger=None, limit=100, latest='now'):
+def get_history(ch, client, say, logger=None, limit=100, latest='now'):
     if logger is not None:
         logger.debug('Now get history')
 
@@ -36,7 +36,8 @@ def get_history(ch, client, logger=None, limit=100, latest='now'):
             logger.error(str(res))
         else:
             print(res)
-        return msgs.fail(), [], False
+        say(msgs.fail())
+        return None, [], False
     else:
         if logger is not None:
             logger.debug(f"get {len(res['messages'])} messages")

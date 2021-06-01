@@ -22,6 +22,10 @@ WAITING_MSGS = [ 'どうしました？マスター？'
                ]
 ERROR_MSGS   = [ 'マスタァ〜，何言ってるんですか？　ガリィには，分かりませ〜ん:sob:'
                ]
+IMIN_MSGS    = [ 'いやですよマスタぁ〜\n私がいるのは，\n{0}\nじゃないですかぁ'
+               ]
+NOPLACE_MSGS = [ 'いやですよマスタぁ〜\n私をどこにも置かなかったのはマスターじゃありませんかぁ'
+               ]
 
 def confirm():
     return random.choice(CONFIRM_MSGS)
@@ -33,3 +37,7 @@ def finish():
     return random.choice(FINISH_MSGS)
 def error():
     return random.choice(ERROR_MSGS)
+def imin():
+    return random.choice(IMIN_MSGS)
+def noplace():
+    return random.choice(NOPLACE_MSGS)
