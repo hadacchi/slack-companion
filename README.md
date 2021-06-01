@@ -39,12 +39,19 @@ slack上のメッセージを見て，コマンドを解釈し，実行するbot
    好みの見た目にしとけ．
 
 ### 2. アプリのデプロイ
+#### 2.1 run with python command
 
 1. bot を動作させるサーバに python と pipenv をインストールする
 2. `Pipfile` のあるディレクトリで `pipenv install` で必要なパッケージをインストール
 3. `pipenv shell` で作った環境に入る
 4. `python gariechan.py` で実行
 5. うまく動作することを確認できたら，`tmux` を使うなりなんなりして，サーバからログアウトしても動作するようにする (なんちゃって常駐化)
+
+#### 2.2 run as docker container
+
+1. `docker build -t gariechan:latest` などのコマンドでコンテナ作成
+2. `docker-compose up -d` で実行
+3. log は docker-compose logs で確認
 
 ### 3. bot を動作させたい channel に参加させる
 
@@ -61,20 +68,22 @@ slack上のメッセージを見て，コマンドを解釈し，実行するbot
 
 次に実装する機能
 
-- 常駐
-    - Finished. I use Bolt for Python.
-    - デーモンぽく動作するように起動スクリプトと終了スクリプトを作る
 - 古い順にN件削除
     - oldestで何とかなりそうだが，以前のAPIだとcountに上限があったので，その場合は前から探索していかないとoldestが見付けられないかも知れない
-- bug fix
-    - 完了メッセージが1回だけ出るように修正する
-        - 実害はないし，後回し
-- OAuth認証
-    - アプリで配信しないので，いらないか…?
-    - 各自，コードをデプロイして使ってくれ
 - 参加チャネルの出力
     - アプリをchに追加する場合，membersに表示されないのでどのchにアプリが参加しているかわからない
         - 参加しているch名のリストを/コマンドへのリアクションか，where are youへの回答で出力させる
+- Pending
+    - OAuth認証
+        - アプリで配信しないので，いらないか…?
+        - 各自，コードをデプロイして使ってくれ
+    - bug fix
+        - 完了メッセージが1回だけ出るように修正する
+            - 実害はないし，後回し
+- Finished
+    - 常駐
+        - Finished. I use Bolt for Python.
+        - Finished. I use docker container. -> デーモンぽく動作するように起動スクリプトと終了スクリプトを作る
 
 
 ## 注意
