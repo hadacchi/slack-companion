@@ -3,15 +3,6 @@ import time
 
 import msgs
 
-# old method as references
-#auth_url    = 'https://slack.com/api/oauth.access'
-#chlist_url  = 'https://slack.com/api/channels.list'
-#imlist_url  = 'https://slack.com/api/im.list'
-#oauth_url   = 'https://slack.com/oauth/authorize'
-#test_url    = 'https://slack.com/api/auth.test'
-#usrinfo_url = 'https://slack.com/api/users.info'
-#usrlist_url = 'https://slack.com/api/users.list'
-
 def clear_history(ch, msg_list, client, logger=None):
     if logger is not None:
         logger.debug('Now clear history')
