@@ -1,0 +1,9 @@
+.mypy_cache/
+.venv/
+__pycache__/
+.git/
+.gitignore
+old/
+secret.toml.sample
+Dockerfile
+docker-compose.yml

@@ -1,0 +1,11 @@
+version: "3"
+
+# gariechan is made by following command
+# $ docker build -t gariechan:latest .
+
+services:
+    gariechan:
+        image: gariechan:latest
+        tty: true
+        restart: unless-stopped
+
