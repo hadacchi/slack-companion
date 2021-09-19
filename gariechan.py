@@ -10,9 +10,10 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 import msgprocessing as msgp
 import msgs
 
+# set log level at main function
 # if program will be completed, change to logging.ERROR
 # when program should be debugged, change to logging.DEBUG
-logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(level=logging.INFO)
 #logging.basicConfig(level=logging.DEBUG)
 
 config = toml.load(open('secret.toml'))
@@ -108,5 +109,15 @@ def nop(message, logger):
     logger.debug(str(message))
 
 if __name__ == "__main__":
+    # if program will be completed, change to logging.ERROR
+    # when program should be debugged, change to logging.DEBUG
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    #logger.setLevel(logging.DEBUG)
+
+    # log file
+    fh = logging.FileHandler('garie.log')
+    logger.addHandler(fh)
+
     handler = SocketModeHandler(app, slack_app_token)
     handler.start()

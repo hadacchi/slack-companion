@@ -55,7 +55,7 @@ slack上のメッセージを見て，コマンドを解釈し，実行するbot
 
 #### 2.2 run as docker container
 
-1. `docker build -t gariechan:latest` などのコマンドでコンテナ作成
+1. `docker build -t gariechan:latest .` などのコマンドでコンテナ作成
 2. `docker-compose up -d` で実行
 3. log は docker-compose logs で確認
 
