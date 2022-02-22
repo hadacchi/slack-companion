@@ -98,7 +98,7 @@ def handle_message_events(message, say, logger, context):
         count = 100
     elif matches == 'all':
         count = 99999999
-    elif matches[1:].isnumeric():
+    elif matches.isdigit():
         count = int(matches)
     else:
         logging.error('Invalid number {matches}')
