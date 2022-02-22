@@ -114,7 +114,7 @@ def _get_credentials():
     credentials = storage.get()
 
     if credentials is None or credentials.invalid:
-        flags = argparse.Namespace(noauth_local_webserver=True)
+        flags = argparse.Namespace(noauth_local_webserver=True, logging_level='ERROR')
         credentials = run_flow(flow, storage, flags)
 
     return credentials
@@ -128,4 +128,5 @@ def _open_youtube_session():
 
     return youtube
 
-
+if __name__ == '__main__':
+    youtube = _open_youtube_session()

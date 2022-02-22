@@ -7,10 +7,16 @@ slack上のメッセージを見て，コマンドを解釈し，実行するbot
 1. `@BOTNAME clear 10` で発言した channel の発言を最新10件削除
 1. `@BOTNAME clear all` で発言した channel の発言を全件削除
 1. `@BOTNAME where` で BOT の参加する channel list を返却
+1. youtube のプレイリストの自動作成
+    1. botの参加するchで，作成したいプレイリスト名を入れて発言
+    1. プレイリスト名のスレッドに返信でyoutubeの動画URLを発言
+        - 1発言に1URL，他に余分な文字列はつけないこと
+        - 短縮URL youtu.be もOK
+    1. プレイリストに入れたいURLを全て発言し終えたら，`@BOTNAME pick` と発言すると完成
 
 ## Manual
 
-### 1. アプリの作成
+### 1. slack アプリの作成
 
 アプリをインストールしたいslackのワークスペースに接続したセッションで https://api.slack.com/apps へアクセス
 
@@ -44,7 +50,7 @@ slack上のメッセージを見て，コマンドを解釈し，実行するbot
    設定する．  
    好みの見た目にしとけ．
 
-### 2. アプリのデプロイ
+### 2. slack アプリのデプロイ
 #### 2.1 run with python command
 
 1. bot を動作させるサーバに python と pipenv をインストールする
@@ -69,7 +75,47 @@ slack上のメッセージを見て，コマンドを解釈し，実行するbot
     3. 以上の動作を確認できれば完了  
        だめなら頑張れ
 
-## TODO
+### 4. youtube Data API v3 クライアントの作成
+
+#### 4.1 GCP のアカウント・プロジェクトの作成
+
+GCPアカウント・プロジェクトは既にあるものとする．
+
+#### 4.2 Youtube Data API v3 の OAuth クライアント ID を作成するための OAuth 同意画面の作成
+
+1. GCPのプロジェクト内で「Youtube Data API」を検索し，有効化されてなければ有効化する
+1. YouTube Data API v3の管理画面の左のメニューから「認証情報」を選択
+1. 認証情報を作成
+    - OAuthクライアントIDを選択
+    - 画面に従って進めようとすると同意画面の作成をさせられるので，画面に従って作成
+    - User Type は外部
+    - スコープの設定は不要
+    - テストユーザーには操作したいYoutubeアカウントにしているgoogleアカウントを設定
+1. 保存して次へ
+
+#### 4.3 Youtube Data API v3 の OAuth クライアント ID の作成
+
+1. 再度，YouTube Data API v3の管理画面の左のメニューから「認証情報」を選択
+1. 認証情報を作成
+    - OAuthクライアントIDを選択
+    - デスクトップアプリを選択し名前をつける
+
+#### 4.4 Youtube Data API v3 の OAuth クライアント ID と クライアントシークレット の JSON を保存
+
+1. OAuthクライアントIDを作成した画面または認証情報の画面から，JSONをダウンロード
+1. 適当な名前にリネームしファイルを保存
+
+#### 4.5 secret.toml の youtube-client テーブルのファイル名を指定
+
+1. 設定したファイル名を secret.toml の youtube-client の CLIENT_SECRET_FILE へ指定
+1. OAUTH_TOKEN_JSON は，適当なJSONファイル名を指定 (ファイルはなくても良い)
+
+#### 4.6 OAuth トークンの取得
+
+1. `python youtu.py` を実行し，画面に従ってOAuth認証を完了させる
+
+
+# TODO
 
 次に実装する機能
 
