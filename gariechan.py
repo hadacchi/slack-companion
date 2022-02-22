@@ -15,8 +15,8 @@ import youtu
 # if program will be completed, change to logging.ERROR
 # when program should be debugged, change to logging.DEBUG
 logging.basicConfig(level=logging.ERROR)
-#logging.basicConfig(level=logging.INFO)
-#logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.DEBUG)
 
 config = toml.load(open('secret.toml'))
 
@@ -49,14 +49,14 @@ def pick_message(message, say, logger, context):
     client = WebClient(token=slack_user_token)
 
     logger.debug(str(message))
-    #say(msgs.confirm())
-
+    # say(msgs.confirm())
 
     if 'thread_ts' in message:
         # pick command is in the thread
         # now, search the thread
         thread_ts = message['thread_ts']
-        listname, video_ids = msgp.get_video_ids_from_replies(ch, thread_ts, client, logger)
+        listname, video_ids = msgp.get_video_ids_from_replies(
+            ch, thread_ts, client, logger)
 
         response = youtu.make_playlist(listname, logger)
 
@@ -76,7 +76,8 @@ def pick_message(message, say, logger, context):
             if respond is None:
                 break
 
-            replies = msgp.retrieve_threads(message['channel'], msg_list, client, logger)
+            replies = msgp.retrieve_threads(
+                message['channel'], msg_list, client, logger)
             count -= len(msg_list)
 
             if has_more:
@@ -160,8 +161,8 @@ if __name__ == "__main__":
     # if program will be completed, change to logging.ERROR
     # when program should be debugged, change to logging.DEBUG
     logger = logging.getLogger()
-    #logger.setLevel(logging.INFO)
-    #logger.setLevel(logging.DEBUG)
+    # logger.setLevel(logging.INFO)
+    # logger.setLevel(logging.DEBUG)
 
     # log file
     fh = logging.FileHandler('garie.log')

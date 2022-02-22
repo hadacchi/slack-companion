@@ -55,6 +55,7 @@ YOUTUBE_READ_WRITE_SCOPE = "https://www.googleapis.com/auth/youtube"
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
+
 def insert_video_to_playlist(playlist_id, video_ids, logger=None):
     if logger is not None:
         logger.info('Now insert videos into playlist')
@@ -85,16 +86,16 @@ def make_playlist(listname, logger=None):
     youtube = _open_youtube_session()
 
     playlists_insert_response = youtube.playlists().insert(
-      part="snippet,status",
-      body=dict(
-        snippet=dict(
-          title=listname,
-          description="Garie chan created this wonderful playlist"
-        ),
-        status=dict(
-          privacyStatus="private"
+        part="snippet,status",
+        body=dict(
+            snippet=dict(
+                title=listname,
+                description="Garie chan created this wonderful playlist"
+            ),
+            status=dict(
+                privacyStatus="private"
+            )
         )
-      )
     ).execute()
 
     if logger is not None:
@@ -105,8 +106,8 @@ def make_playlist(listname, logger=None):
 
 def _get_credentials():
     flow = flow_from_clientsecrets(CLIENT_SECRETS_FILE,
-      message=MISSING_CLIENT_SECRETS_MESSAGE,
-      scope=YOUTUBE_READ_WRITE_SCOPE)
+                                   message=MISSING_CLIENT_SECRETS_MESSAGE,
+                                   scope=YOUTUBE_READ_WRITE_SCOPE)
 
     OAUTH_TOKEN_JSON = config['OAUTH_TOKEN_JSON']
 
@@ -114,7 +115,9 @@ def _get_credentials():
     credentials = storage.get()
 
     if credentials is None or credentials.invalid:
-        flags = argparse.Namespace(noauth_local_webserver=True, logging_level='ERROR')
+        flags = argparse.Namespace(
+            noauth_local_webserver=True,
+            logging_level='ERROR')
         credentials = run_flow(flow, storage, flags)
 
     return credentials
@@ -124,9 +127,10 @@ def _open_youtube_session():
     credentials = _get_credentials()
 
     youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-      http=credentials.authorize(httplib2.Http()))
+                    http=credentials.authorize(httplib2.Http()))
 
     return youtube
+
 
 if __name__ == '__main__':
     youtube = _open_youtube_session()

@@ -38,6 +38,7 @@ def get_video_ids_from_replies(ch, ts, client, logger=None):
 
     return listname, video_ids
 
+
 def retrieve_threads(ch, msg_list, client, logger=None):
 
     if logger is not None:
@@ -46,7 +47,8 @@ def retrieve_threads(ch, msg_list, client, logger=None):
     playlist_list = []
     for i, msg in enumerate(msg_list):
         if 'reply_count' in msg:
-            video_ids = get_video_ids_from_replies(ch, msg['ts'], client, logger)
+            video_ids = get_video_ids_from_replies(
+                ch, msg['ts'], client, logger)
 
             playlist_list.append(video_ids)
 
