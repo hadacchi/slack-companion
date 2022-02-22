@@ -9,12 +9,14 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 import msgprocessing as msgp
 import msgs
+import youtu
 
 # set log level at main function
 # if program will be completed, change to logging.ERROR
 # when program should be debugged, change to logging.DEBUG
-# logging.basicConfig(level=logging.INFO)
-# logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.ERROR)
+#logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(level=logging.DEBUG)
 
 config = toml.load(open('secret.toml'))
 
@@ -46,30 +48,42 @@ def pick_message(message, say, logger, context):
     #client = WebClient(token=slack_bot_token)
     client = WebClient(token=slack_user_token)
 
-    logger.error(str(message))
+    logger.debug(str(message))
     #say(msgs.confirm())
 
 
-    count = 5
+    if 'thread_ts' in message:
+        # pick command is in the thread
+        # now, search the thread
+        thread_ts = message['thread_ts']
+        listname, video_ids = msgp.get_video_ids_from_replies(ch, thread_ts, client, logger)
 
-    while True:
-        if count <= 0:
+        response = youtu.make_playlist(listname, logger)
+
+        youtu.insert_video_to_playlist(response['id'], video_ids, logger)
+    else:
+        # pick command is in the channel
+        # retrieve threads in this channel
+
+        count = 5
+
+        while True:
+            if count <= 0:
+                break
+            limit = min(count, 100)
+            respond, msg_list, has_more = msgp.get_history(
+                ch, client, say, logger, latest=ts, limit=limit)
+            if respond is None:
+                break
+
+            replies = msgp.retrieve_threads(message['channel'], msg_list, client, logger)
+            count -= len(msg_list)
+
+            if has_more:
+                continue
             break
-        limit = min(count, 100)
-        respond, msg_list, has_more = msgp.get_history(
-            ch, client, say, logger, latest=ts, limit=limit)
-        if respond is None:
-            break
 
-        #logger.debug(str(msg_list))
-        replies = msgp.get_replies(message['channel'], msg_list, client, logger)
-        #logger.debug(str(replies))
-        count -= len(msg_list)
-
-        if has_more:
-            continue
-        break
-
+    # delete command message
     msgp.rm_history(ch, ts, client, logger)
 
 
@@ -147,11 +161,11 @@ if __name__ == "__main__":
     # when program should be debugged, change to logging.DEBUG
     logger = logging.getLogger()
     #logger.setLevel(logging.INFO)
-    logger.setLevel(logging.DEBUG)
+    #logger.setLevel(logging.DEBUG)
 
     # log file
-    #fh = logging.FileHandler('garie.log')
-    #logger.addHandler(fh)
+    fh = logging.FileHandler('garie.log')
+    logger.addHandler(fh)
 
     handler = SocketModeHandler(app, slack_app_token)
     handler.start()

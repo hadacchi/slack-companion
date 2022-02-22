@@ -2,42 +2,55 @@ import json
 import time
 
 import msgs
-import pickle
 
 
-def get_replies(ch, msg_list, client, logger=None):
+def get_video_ids_from_replies(ch, ts, client, logger=None):
     if logger is not None:
-        logger.error('Now get replies')
+        logger.info('Now get replies')
 
-    video_ids = []
+    res = client.conversations_replies(channel=ch, ts=ts)
+    logger.debug(str(res))
+
+    if not res['ok']:
+        if logger is not None:
+            logger.error(str(res))
+        else:
+            print(res)
+        say(msgs.fail())
+        return []
+    else:
+        data = res['messages']
+
+        listname = data[0]['text']
+
+        video_ids = []
+        for m in data[1:]:
+            if m['text'].find('www.youtube.com') > 0:
+                # youtube
+                video_ids.append(m['text'].replace(
+                    '>', '').split('=')[-1])
+            elif m['text'].find('youtu.be') > 0:
+                # youtu.be
+                video_ids.append(m['text'].replace(
+                    '>', '').split('/')[-1])
+            else:
+                logger.error(f"unknown url {m['text']}")
+
+    return listname, video_ids
+
+def retrieve_threads(ch, msg_list, client, logger=None):
+
+    if logger is not None:
+        logger.info('Now retrieve threads')
+
+    playlist_list = []
     for i, msg in enumerate(msg_list):
         if 'reply_count' in msg:
-            logger.error(f'reply_count is {msg["reply_count"]}')
-            res = client.conversations_replies(channel=ch, ts=msg['ts'])
-            if not res['ok']:
-                if logger is not None:
-                    logger.error(str(res))
-                else:
-                    print(res)
-                say(msgs.fail())
-                return None, [], False
-            else:
-                data = res['messages']
-                listname = data[0]['text']
-                for m in data[1:]:
-                    if m['text'].find('www.youtube.com') > 0:
-                        # youtube
-                        video_ids.append(m['text'].replace(
-                            '>', '').split('=')[-1])
-                    elif m['text'].find('youtu.be') > 0:
-                        # youtu.be
-                        video_ids.append(m['text'].replace(
-                            '>', '').split('/')[-1])
-                    else:
-                        logger.error(f"unknown url {m['text']}")
-            pickle.dump(video_ids, open('res.pkl', 'wb'))
-            return
-            # logger.error(str(res))
+            video_ids = get_video_ids_from_replies(ch, msg['ts'], client, logger)
+
+            playlist_list.append(video_ids)
+
+    return playlist_list
 
 
 def clear_history(ch, msg_list, client, logger=None):
