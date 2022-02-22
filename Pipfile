@@ -9,6 +9,9 @@ slack-sdk = "*"
 slack-bolt = "*"
 
 [dev-packages]
+pytest = "*"
+pycodestyle = "*"
+autopep8 = "*"
 
 [requires]
 python_version = "3.8"
