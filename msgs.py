@@ -23,6 +23,8 @@ IMIN_MSGS = ['いやですよマスタぁ〜\n私がいるのは，\n{0}\nじゃ
              ]
 NOPLACE_MSGS = ['いやですよマスタぁ〜\n私をどこにも置かなかったのはマスターじゃありませんかぁ'
                 ]
+DUP_MSGS = ['マスタぁ〜\nこいつらダブってますよ?\n{0}'
+            ]
 
 
 def confirm():
@@ -51,3 +53,7 @@ def imin():
 
 def noplace():
     return random.choice(NOPLACE_MSGS)
+
+
+def dup():
+    return random.choice(DUP_MSGS)

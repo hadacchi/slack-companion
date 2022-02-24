@@ -12,7 +12,8 @@ slack上のメッセージを見て，コマンドを解釈し，実行するbot
     1. プレイリスト名のスレッドに返信でyoutubeの動画URLを発言
         - 1発言に1URL，他に余分な文字列はつけないこと
         - 短縮URL youtu.be もOK
-    1. プレイリストに入れたいURLを全て発言し終えたら，`@BOTNAME pick` と発言すると完成
+    1. プレイリストに入れたいURLを全て発言し終えたら，`@BOTNAME playlist` と発言すると完成
+    1. 重複チェックしたい時は `@BOTNAME check`
 
 ## Manual
 

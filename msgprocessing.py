@@ -24,22 +24,32 @@ def get_video_ids_from_replies(ch, ts, client, logger=None):
         listname = data[0]['text']
 
         video_ids = []
-        for m in data[1:]:
+        dup = []
+        for i, m in enumerate(data[1:]):
             if m['text'].find('www.youtube.com') > 0:
                 # youtube
-                video_ids.append(m['text'].replace(
-                    '>', '').split('=')[-1])
+                vid = m['text'].replace('>', '').split('=')[-1]
             elif m['text'].find('youtu.be') > 0:
                 # youtu.be
-                video_ids.append(m['text'].replace(
-                    '>', '').split('/')[-1])
+                vid = m['text'].replace('>', '').split('/')[-1]
             else:
-                logger.error(f"unknown url {m['text']}")
+                logger.info(f"unknown url {m['text']}")
+                vid = None
+            if vid in video_ids:
+                dup.append([vid, i])
+            elif vid is not None:
+                video_ids.append(vid)
 
-    return listname, video_ids
+    return listname, video_ids, dup
 
 
 def retrieve_threads(ch, msg_list, client, logger=None):
+    '''複数リストの処理．使いづらいからちゃんとテストできてないので，
+    使う前に必ずテストしてから使うこと．
+    呼び出し側はそもそも未実装．
+    '''
+
+    return
 
     if logger is not None:
         logger.info('Now retrieve threads')
@@ -47,10 +57,10 @@ def retrieve_threads(ch, msg_list, client, logger=None):
     playlist_list = []
     for i, msg in enumerate(msg_list):
         if 'reply_count' in msg:
-            video_ids = get_video_ids_from_replies(
+            listname, video_ids, dup = get_video_ids_from_replies(
                 ch, msg['ts'], client, logger)
 
-            playlist_list.append(video_ids)
+            playlist_list.append([listname, video_ids])
 
     return playlist_list
 

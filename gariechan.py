@@ -35,10 +35,31 @@ del client
 
 app = App(token=slack_bot_token)
 
-# イベント API
+# event API
+
+@app.message(re.compile(f'<@{bot_user_id}> *check$'))
+def check_duplicate(message, say, logger, context):
+    '''search thread for duplicated items.
+
+    this function work only if called from conversation reply.
+    '''
 
 
-@app.message(re.compile(f'<@{bot_user_id}> *pick$'))
+    if 'thread_ts' in message:
+        ch = message['channel']
+        client = WebClient(token=slack_user_token)
+        thread_ts = message['thread_ts']
+        listname, video_ids, dup = msgp.get_video_ids_from_replies(
+            ch, thread_ts, client, logger)
+
+        if len(dup) > 0:
+            say(msgs.dup().format('\n'.join([f'No.{i+1}: `{vid}`' for vid, i in dup])), thread_ts=thread_ts)
+
+    # delete command message
+    #msgp.rm_history(ch, ts, client, logger)
+
+
+@app.message(re.compile(f'<@{bot_user_id}> *playlist$'))
 def pick_message(message, say, logger, context):
     '''pick message from the ch
     '''
@@ -49,43 +70,25 @@ def pick_message(message, say, logger, context):
     client = WebClient(token=slack_user_token)
 
     logger.debug(str(message))
-    # say(msgs.confirm())
+    # say(msgs.confirm(),thread_ts=ts)
 
     if 'thread_ts' in message:
         # pick command is in the thread
         # now, search the thread
         thread_ts = message['thread_ts']
-        listname, video_ids = msgp.get_video_ids_from_replies(
+        listname, video_ids, dup = msgp.get_video_ids_from_replies(
             ch, thread_ts, client, logger)
+
+        if len(dup) > 0:
+            say(msg.dup().format('\n'.join([f'No.{i+1}: `{vid}`' for vid, i in dup])), thread_ts=thread_ts)
 
         response = youtu.make_playlist(listname, logger)
 
         youtu.insert_video_to_playlist(response['id'], video_ids, logger)
-    else:
-        # pick command is in the channel
-        # retrieve threads in this channel
 
-        count = 5
-
-        while True:
-            if count <= 0:
-                break
-            limit = min(count, 100)
-            respond, msg_list, has_more = msgp.get_history(
-                ch, client, say, logger, latest=ts, limit=limit)
-            if respond is None:
-                break
-
-            replies = msgp.retrieve_threads(
-                message['channel'], msg_list, client, logger)
-            count -= len(msg_list)
-
-            if has_more:
-                continue
-            break
 
     # delete command message
-    msgp.rm_history(ch, ts, client, logger)
+    #msgp.rm_history(ch, ts, client, logger)
 
 
 @app.message(re.compile(f'<@{bot_user_id}> *clear *([^ ]*)$'))
