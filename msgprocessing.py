@@ -2,25 +2,21 @@ import json
 import time
 
 import msgs
+from dump_log import dump_log
 
 
 def get_video_ids_from_replies(ch, ts, client, logger=None):
-    if logger is not None:
-        logger.info('Now get replies')
+    dump_log('get_video_ids_From_replies', logger)
 
     res = client.conversations_replies(channel=ch, ts=ts)
     logger.debug(str(res))
 
     if not res['ok']:
-        if logger is not None:
-            logger.error(str(res))
-        else:
-            print(res)
+        dump_log(str(res), logger, 'error')
         say(msgs.fail())
         return []
     else:
         data = res['messages']
-
         listname = data[0]['text']
 
         video_ids = []
@@ -43,64 +39,75 @@ def get_video_ids_from_replies(ch, ts, client, logger=None):
     return listname, video_ids, dup
 
 
-def retrieve_threads(ch, msg_list, client, logger=None):
-    '''複数リストの処理．使いづらいからちゃんとテストできてないので，
-    使う前に必ずテストしてから使うこと．
-    呼び出し側はそもそも未実装．
-    '''
+def remove_messages(ch, ts_list, client, logger=None):
+    dump_log('remove_messages', logger)
 
-    return
-
-    if logger is not None:
-        logger.info('Now retrieve threads')
-
-    playlist_list = []
-    for i, msg in enumerate(msg_list):
-        if 'reply_count' in msg:
-            listname, video_ids, dup = get_video_ids_from_replies(
-                ch, msg['ts'], client, logger)
-
-            playlist_list.append([listname, video_ids])
-
-    return playlist_list
+    for i, ts in enumerate(ts_list):
+        client.chat_delete(channel=ch, ts=ts)
+        time.sleep(1)
+    dump_log(f'{i+1} messages were deleted', logger, 'debug')
 
 
 def clear_history(ch, msg_list, client, logger=None):
-    if logger is not None:
-        logger.debug('Now clear history')
+    dump_log('clear_history', logger)
 
     for i, msg in enumerate(msg_list):
+        if 'thread_ts' in msg:
+            clear_replies(ch, msg['thread_ts'], 1000, client, logger)
         client.chat_delete(channel=ch, ts=msg['ts'])
         time.sleep(1)
-    logger.info(f'{i+1} messages were deleted')
-    return msgs.finish()
+    dump_log(f'{i+1} messages were deleted', logger, 'debug')
 
 
-def get_history(ch, client, say, logger=None, limit=100, latest='now'):
-    if logger is not None:
-        logger.debug('Now get history')
+def get_history(ch, client, say, logger=None, limit=100, cursor=None, latest='now'):
+    dump_log('get_history', logger)
 
-    res = client.conversations_history(
-        channel=ch,
-        limit=limit,
-        inclusive=True,
-        latest=latest)
-    if not res['ok']:
-        if logger is not None:
-            logger.error(str(res))
-        else:
-            print(res)
-        say(msgs.fail())
-        return None, [], False
+    if latest == 'now':
+        res = client.conversations_history(channel=ch, limit=limit, inclusive=True, cursor=cursor)
     else:
-        if logger is not None:
-            logger.debug(f"get {len(res['messages'])} messages")
-        return msgs.confirm(), res['messages'], res['has_more']
+        res = client.conversations_history(channel=ch, limit=limit, inclusive=True, latest=latest)
+    if not res['ok']:
+        dump_log(str(res), logger, 'error')
+        say(msgs.fail())
+        return [], False
+    else:
+        dump_log(f"get {len(res['messages'])} messages", logger, 'debug')
+        cursor = res['response_metadata']['next_cursor'] if res['has_more'] else None
+        return res['messages'], res['has_more'], cursor
+
+
+def clear_replies(ch, thread_ts, count, client, logger=None):
+    dump_log('clear_replies', logger)
+
+    msg_list = get_replies(ch, thread_ts, client, logger, count)
+
+    ts_list = [msg['ts'] for msg in msg_list[1:] if 'ts' in msg]
+    remove_messages(ch, ts_list[-count:], client, logger)
+
+
+def get_replies(ch, thread_ts, client, logger=None, limit=1000):
+    dump_log('get_replies', logger)
+
+    replies = []
+    has_more = True
+    cursor = None
+
+    while has_more:
+        res = client.conversations_replies(channel=ch, ts=thread_ts, limit=limit, cursor=cursor)
+        if not res['ok']:
+            error_msg(logger, str(res), 'error')
+            say(msgs.fail())
+            return
+        else:
+           replies += res['messages']
+           has_more = res['has_more']
+           cursor = res['response_metadata']['next_cursor'] if has_more else None
+
+    return replies
 
 
 def rm_history(ch, ts, client, logger=None):
-    if logger is not None:
-        logger.debug('Now rm history')
+    dump_log('rm_history', 'logger')
 
     res = client.chat_delete(channel=ch, ts=ts)
     return msgs.finish()

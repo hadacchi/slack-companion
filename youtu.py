@@ -90,11 +90,8 @@ def make_playlist(listname, logger=None):
         body=dict(
             snippet=dict(
                 title=listname,
-                description="Garie chan created this wonderful playlist"
-            ),
-            status=dict(
-                privacyStatus="private"
-            )
+                description="Garie chan created this wonderful playlist"),
+            status=dict(privacyStatus="private")
         )
     ).execute()
 
@@ -102,6 +99,37 @@ def make_playlist(listname, logger=None):
         logger.debug(playlists_insert_response)
 
     return playlists_insert_response
+
+
+def get_playlist(playlist_id, logger=None):
+    if logger is not None:
+        logger.info('Now make playlist')
+
+    youtube = _open_youtube_session()
+
+    playlistitems_list_request = youtube.playlistItems().list(
+        playlistId=playlist_id,
+        part="snippet",
+        maxResults=50)
+
+    vids = []
+    while playlistitems_list_request:
+        playlistitems_list_response = playlistitems_list_request.execute()
+
+        # Print information about each video.
+        for playlist_item in playlistitems_list_response["items"]:
+            title = playlist_item["snippet"]["title"]
+            video_id = playlist_item["snippet"]["resourceId"]["videoId"]
+            #vids.append(f"{i}: {title} - {video_id}")
+            if video_id in vids:
+                logger.info(f'two or more {video_id} are in playlist')
+            else:
+                vids.append(video_id)
+
+        playlistitems_list_request = youtube.playlistItems().list_next(
+            playlistitems_list_request, playlistitems_list_response)
+
+    return vids
 
 
 def _get_credentials():
