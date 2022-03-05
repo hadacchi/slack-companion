@@ -15,9 +15,9 @@ import youtu
 # set log level at main function
 # if program will be completed, change to logging.ERROR
 # when program should be debugged, change to logging.DEBUG
-#logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.ERROR)
 #logging.basicConfig(level=logging.INFO)
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 
 config = toml.load(open('secret.toml'))
 

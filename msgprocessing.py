@@ -53,7 +53,7 @@ def clear_history(ch, msg_list, client, logger=None):
 
     for i, msg in enumerate(msg_list):
         if 'thread_ts' in msg:
-            clear_replies(ch, msg['thread_ts'], 1000, client, logger)
+            clear_replies(ch, msg['thread_ts'], 999, client, logger)
         client.chat_delete(channel=ch, ts=msg['ts'])
         time.sleep(1)
     dump_log(f'{i+1} messages were deleted', logger, 'debug')
@@ -85,7 +85,7 @@ def clear_replies(ch, thread_ts, count, client, logger=None):
     remove_messages(ch, ts_list[-count:], client, logger)
 
 
-def get_replies(ch, thread_ts, client, logger=None, limit=1000):
+def get_replies(ch, thread_ts, client, logger=None, limit=999):
     dump_log('get_replies', logger)
 
     replies = []
@@ -107,7 +107,7 @@ def get_replies(ch, thread_ts, client, logger=None, limit=1000):
 
 
 def rm_history(ch, ts, client, logger=None):
-    dump_log('rm_history', 'logger')
+    dump_log('rm_history', logger)
 
     res = client.chat_delete(channel=ch, ts=ts)
     return msgs.finish()
