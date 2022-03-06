@@ -4,6 +4,8 @@ slack上のメッセージを見て，コマンドを解釈し，実行するbot
 
 ## How to Use
 
+see [command references](command_references.md) for details.
+
 1. `@BOTNAME clear 10` で発言した channel の発言を最新10件削除
 1. `@BOTNAME clear all` で発言した channel の発言を全件削除
 1. `@BOTNAME where` で BOT の参加する channel list を返却
@@ -15,7 +17,7 @@ slack上のメッセージを見て，コマンドを解釈し，実行するbot
     1. プレイリストに入れたいURLを全て発言し終えたら，`@BOTNAME playlist` と発言すると完成
     1. 重複チェックしたい時は `@BOTNAME check`
 
-## Manual
+## Installation
 
 ### 1. slack アプリの作成
 
@@ -119,6 +121,8 @@ GCPアカウント・プロジェクトは既にあるものとする．
 # TODO
 
 次に実装する機能
+
+issue へ記述。
 
 - 古い順にN件削除
     - oldestで何とかなりそうだが，以前のAPIだとcountに上限があったので，その場合は前から探索していかないとoldestが見付けられないかも知れない
