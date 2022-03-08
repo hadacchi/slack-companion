@@ -1,15 +1,18 @@
 import json
 import time
+import urllib.parse
+import re
 
 import msgs
 from dump_log import dump_log
 
+urlpat = re.compile('https?://[^\s>]+')
 
 def get_video_ids_from_replies(ch, ts, client, logger=None):
     dump_log('get_video_ids_From_replies', logger)
 
     res = client.conversations_replies(channel=ch, ts=ts)
-    logger.debug(str(res))
+    dump_log(str(res), logger, 'debug')
 
     if not res['ok']:
         dump_log(str(res), logger, 'error')
@@ -22,20 +25,32 @@ def get_video_ids_from_replies(ch, ts, client, logger=None):
         video_ids = []
         dup = []
         for i, m in enumerate(data[1:]):
-            if m['text'].find('www.youtube.com') > 0:
-                # youtube
-                vid = m['text'].replace('>', '').split('=')[-1]
-            elif m['text'].find('youtu.be') > 0:
-                # youtu.be
-                vid = m['text'].replace('>', '').split('/')[-1]
-            else:
-                logger.info(f"unknown url {m['text']}")
-                vid = None
-            if vid in video_ids:
-                dup.append([vid, i])
-            elif vid is not None:
-                video_ids.append(vid)
+            urls = urlpat.findall(m['text'])
+            dump_log(str(urls), logger, 'debug')
+            vids = []
+            for url in urls:
+                dump_log(url, logger, 'debug')
+                if url.find('youtube.com') > 0:
+                    dump_log('youtube.com', logger, 'debug')
+                    # www.youtube.com or music.youtube.com
+                    qstring = urllib.parse.urlparse(url).query
+                    params = urllib.parse.parse_qs(qstring)
+                    if 'v' in params:
+                        vids += params['v']
+                elif url.find('youtu.be') > 0:
+                    dump_log('youtu.be', logger, 'debug')
+                    # youtu.be
+                    vids += [urllib.parse.urlparse(url).path[1:],]
+                else:
+                    dump_log('other', logger, 'debug')
+            for vid in vids:
+                if vid in video_ids:
+                    dup.append([vid, i])
+                else:
+                    video_ids.append(vid)
 
+    dump_log(f'dup is {dup}', logger, 'debug')
+    dump_log(f'videos are {video_ids}', logger, 'debug')
     return listname, video_ids, dup
 
 
@@ -74,6 +89,20 @@ def get_history(ch, client, say, logger=None, limit=100, cursor=None, latest='no
         dump_log(f"get {len(res['messages'])} messages", logger, 'debug')
         cursor = res['response_metadata']['next_cursor'] if res['has_more'] else None
         return res['messages'], res['has_more'], cursor
+
+
+def get_message(ch, client, ts, say, logger=None, limit=1, cursor=None):
+    dump_log('get_message', logger)
+
+    res = client.conversations_history(channel=ch, limit=limit, inclusive=True, latest=ts)
+    if not res['ok']:
+        dump_log(str(res), logger, 'error')
+        say(msgs.fail())
+        return [], False
+    else:
+        dump_log(f"get message", logger, 'debug')
+        dump_log(str(res['messages']), logger)
+        return res['messages']
 
 
 def clear_replies(ch, thread_ts, count, client, logger=None):
