@@ -140,3 +140,13 @@ def rm_history(ch, ts, client, logger=None):
 
     res = client.chat_delete(channel=ch, ts=ts)
     return msgs.finish()
+
+
+def dm_write(user_id, msg, client, logger=None):
+    dump_log('dm_write', logger)
+
+    res = client.conversations_open(users=user_id)
+    dm_id = res['channel']['id']
+
+    client.chat_postMessage(channel=dm_id, text=msg)
+

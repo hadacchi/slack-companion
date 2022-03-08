@@ -10,6 +10,7 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 import msgprocessing as msgp
 import msgs
+import userprocessing as usrp
 import youtu
 
 # set log level at main function
@@ -75,24 +76,31 @@ def clear_command(message, say, logger, context):
         # ここにthread_tsを消す処理を追加する
     else:
         ts = message['ts']
-        #say(msgs.confirm())
+        say(msgs.confirm())
         has_more = True
+        cursor = None
 
         while has_more:
             if count <= 0:
                 break
 
-            limit = min(count, 100)
-            msg_list, has_more, cursor = msgp.get_history(ch, client, say, logger, limit=limit)  #, latest=ts)
+            paramdict = { 'limit': min(count, 100), }
+            if cursor is None:
+                paramdict['latest'] = ts
+            else:
+                paramdict['cursor'] = cursor
+            #msg_list, has_more, cursor = msgp.get_history(ch, client, say, logger, limit=limit, cursor=cursor, latest=ts)
+            msg_list, has_more, cursor = msgp.get_history(ch, client, say, logger, **paramdict)
 
             msgp.clear_history(ch, msg_list, client, logger)
             count -= len(msg_list)
+        say(msgs.finish())
 
 # bot status
 @app.message(re.compile(f'<@{bot_user_id}> *([W|w]here)'))
 def return_joining_channels(say, logger, context):
     '''tell channel names where the bot joins
-
+    
     `@BOTNAME where`
     '''
 
@@ -167,6 +175,7 @@ def check_duplicate(message, say, logger, context):
             say(msgs.dup().format('\n'.join([f'No.{i+1}: `{vid}`' for vid, i in dup])), thread_ts=thread_ts)
 
     # delete command message
+    # this func needs user token scope
     msgp.rm_history(ch, ts, client, logger)
 
 
@@ -185,7 +194,6 @@ def mklist_message(message, say, logger, context):
 
     ch = message['channel']
     ts = message['ts']
-    #client = WebClient(token=slack_bot_token)
     client = WebClient(token=slack_user_token)
 
     logger.debug(str(message))
@@ -207,12 +215,13 @@ def mklist_message(message, say, logger, context):
 
 
     # delete command message
+    # this func needs user token scope
     msgp.rm_history(ch, ts, client, logger)
 
 
 # debug
 @app.message(re.compile(f'<@{bot_user_id}> *read$'))
-def read_slack(message, say, logger,context):
+def read_slack(message, say, logger, context):
     '''read slack message and dump to log
     
     This is a command to debug bot program.
@@ -230,10 +239,32 @@ def read_slack(message, say, logger,context):
     else:
         thread_ts = None
 
-    logger.error(str([ch, ts, thread_ts]))
+    logger.info(str([ch, ts, thread_ts]))
+    logger.info(str(message))
     say(str([ch, ts, thread_ts]))
     msgp.rm_history(ch, ts, client, logger)
 
+
+@app.message(re.compile(f'<@{bot_user_id}> *users$'))
+def dump_users(message, say, logger, context):
+    '''dump user list to log
+    
+    `@BOTNAME users`
+    '''
+    client = WebClient(token=slack_bot_token)
+    usrp.get_users(client, logger)
+
+
+@app.message(re.compile(f'<@{bot_user_id}> *dm$'))
+def send_dm(message, say, logger, context):
+    '''send DM
+    
+    `@BOTNAME dm`
+    '''
+    user_id = message['user']
+    msg = 'test message'
+    client = WebClient(token=slack_user_token)
+    msgp.dm_write(user_id, msg, client, logger)
 
 @app.event('message')
 def nop(message, logger):
