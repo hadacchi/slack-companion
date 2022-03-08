@@ -33,28 +33,102 @@ client = WebClient(token=slack_bot_token)
 bot_user_id = client.auth_test()['user_id']
 del client
 
-
 app = App(token=slack_bot_token)
 
-# event API
-@app.message(re.compile(f'<@{bot_user_id}> *read$'))
-def read_slack(message, say, logger,context):
-    '''read slack messages to debug
+### event API ###
+
+# slack message control
+@app.message(re.compile(f'<@{bot_user_id}> *clear *([^ ]*)$'))
+def clear_command(message, say, logger, context):
+    '''remove message in the channel
+
+    `@BOTNAME clear [all|NUM]`
+
+    where `NUM` is the number that you want to remove.
+
+    If you type this command in a channel, bot remove channel messages.
+    Target message has replies, this command also remove them.
+
+    If you type this command in a thread, bot remove all replies in the thread and
+    thread head message.
+    In this case, any `OPTIONS` are ignored, and remove all replies.
     '''
+
+    matches = context['matches'][0]
+    if matches == '':
+        count = 100
+    elif matches == 'all':
+        count = 99999999
+    elif matches.isdigit():
+        count = int(matches)
+    else:
+        logging.error('Invalid number {matches}')
+        say(msgs.error())
+        return
+
     ch = message['channel']
-    ts = message['ts']
     client = WebClient(token=slack_user_token)
-    thread_ts = message['thread_ts'] if 'thread_ts' in message else None
 
-    logger.error(str([ch, ts, thread_ts]))
-    say(str([ch, ts, thread_ts]))
-    msgp.rm_history(ch, ts, client, logger)
+    if 'thread_ts' in message:
+        # this command called in reply
+        msgp.clear_replies(ch, message['thread_ts'], count, client, logger)
+        # ここにthread_tsを消す処理を追加する
+    else:
+        ts = message['ts']
+        #say(msgs.confirm())
+        has_more = True
+
+        while has_more:
+            if count <= 0:
+                break
+
+            limit = min(count, 100)
+            msg_list, has_more, cursor = msgp.get_history(ch, client, say, logger, limit=limit)  #, latest=ts)
+
+            msgp.clear_history(ch, msg_list, client, logger)
+            count -= len(msg_list)
+
+# bot status
+@app.message(re.compile(f'<@{bot_user_id}> *([W|w]here)'))
+def return_joining_channels(say, logger, context):
+    '''tell channel names where the bot joins
+
+    `@BOTNAME where`
+    '''
+
+    client = WebClient(token=slack_bot_token)
+
+    # if you want only channels, ch['is_channel'] will be good filter
+
+    channels = []
+
+    for ch in client.conversations_list()['channels']:
+        members = client.conversations_members(channel=ch['id'])['members']
+        if bot_user_id in members:
+            channels.append(ch['name'])
+    if len(channels) > 0:
+        say(msgs.imin().format('\n'.join(channels)))
+    else:
+        say(msgs.noplace())
 
 
+# YouTube playlist handling
+# For this bot, a thread is a playlist and replies of the thread are playlist
+# items.
 @app.message(re.compile(f'<@{bot_user_id}> *pick *([^ ]*)$'))
 def read_playlist(message, say, logger, context):
-    '''read playlist items
+    '''read your playlist or public playlist
+    
+    `@BOTNAME pick URL`,  
+    where `URL` is a playlist URL.
+    
+    Acceptable format is `https://youtube.com/playlist?list=PLAYLIST_ID`.
+    Any other QUERY_STRING is not acceptable.
+    
+    Playlist items are written as replies of pick command.
+    If you type this command in a thread, bot adds items to the thread.
     '''
+
     ch = message['channel']
     ts = message['ts']
     matches = context['matches'][0]
@@ -70,14 +144,15 @@ def read_playlist(message, say, logger, context):
             say(f'https://www.youtube.com/watch?v={vid}', thread_ts=ts)
             time.sleep(1)
 
-    # delete command message
-    #msgp.rm_history(ch, ts, client, logger)
-
 
 @app.message(re.compile(f'<@{bot_user_id}> *check$'))
 def check_duplicate(message, say, logger, context):
-    '''search thread for duplicated items.
-    this function work only if called from conversation reply.
+    '''check duplicate item in a thread
+
+    `@BOTNAME check`
+
+    If there are duplicate items in a thread, video ids and ordinal numbers of
+    them are written in the thread. Then 1st items are not written.
     '''
 
     if 'thread_ts' in message:
@@ -97,7 +172,15 @@ def check_duplicate(message, say, logger, context):
 
 @app.message(re.compile(f'<@{bot_user_id}> *playlist$'))
 def mklist_message(message, say, logger, context):
-    '''pick message from the ch
+    '''make playlist with replies
+    
+    `@BOTNAME playlist`
+    
+    Make playlist. Name of it is thread head message. Items of it are replies of
+    the thread.
+    Acceptable video URL is
+    `https://youtu.be/VIDEO_ID`
+    or `https://www.youtube.com/watch?v=VIDEO_ID`.
     '''
 
     ch = message['channel']
@@ -127,74 +210,40 @@ def mklist_message(message, say, logger, context):
     msgp.rm_history(ch, ts, client, logger)
 
 
-@app.message(re.compile(f'<@{bot_user_id}> *clear *([^ ]*)$'))
-def clear_command(message, say, logger, context):
-    '''clear histories or replies
+# debug
+@app.message(re.compile(f'<@{bot_user_id}> *read$'))
+def read_slack(message, say, logger,context):
+    '''read slack message and dump to log
+    
+    This is a command to debug bot program.
+    It might be useless for general user.
+    
+    `@BOTNAME read`
     '''
-
-    matches = context['matches'][0]
-    if matches == '':
-        count = 100
-    elif matches == 'all':
-        count = 99999999
-    elif matches.isdigit():
-        count = int(matches)
-    else:
-        logging.error('Invalid number {matches}')
-        say(msgs.error())
-        return
 
     ch = message['channel']
+    ts = message['ts']
     client = WebClient(token=slack_user_token)
-
     if 'thread_ts' in message:
-        # this command called in reply
-        msgp.clear_replies(ch, message['thread_ts'], count, client, logger)
+        thread_ts = message['thread_ts']
+        msg = msgp.get_message(ch, client, thread_ts, say)
     else:
-        ts = message['ts']
-        #say(msgs.confirm())
-        has_more = True
+        thread_ts = None
 
-        while has_more:
-            if count <= 0:
-                break
-
-            limit = min(count, 100)
-            msg_list, has_more, cursor = msgp.get_history(ch, client, say, logger, limit=limit)  #, latest=ts)
-
-            msgp.clear_history(ch, msg_list, client, logger)
-            count -= len(msg_list)
-
-
-@app.message(re.compile(f'<@{bot_user_id}> *([W|w]here)'))
-def return_joining_channels(say, logger, context):
-    '''return channels where gariechan joins
-    '''
-
-    client = WebClient(token=slack_bot_token)
-
-    # if you want only channels, ch['is_channel'] will be good filter
-
-    channels = []
-
-    for ch in client.conversations_list()['channels']:
-        members = client.conversations_members(channel=ch['id'])['members']
-        if bot_user_id in members:
-            channels.append(ch['name'])
-    if len(channels) > 0:
-        say(msgs.imin().format('\n'.join(channels)))
-    else:
-        say(msgs.noplace())
+    logger.error(str([ch, ts, thread_ts]))
+    say(str([ch, ts, thread_ts]))
+    msgp.rm_history(ch, ts, client, logger)
 
 
 @app.event('message')
 def nop(message, logger):
+    '''dump debug message when any message is posted in the slack
+    '''
+
     logger.debug(str(message))
 
 
 if __name__ == "__main__":
-    # if program will be completed, change to logging.ERROR
-    # when program should be debugged, change to logging.DEBUG
     logger = logging.getLogger()
     # logger.setLevel(logging.INFO)
     # logger.setLevel(logging.DEBUG)
