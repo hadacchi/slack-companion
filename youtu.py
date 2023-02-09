@@ -57,8 +57,7 @@ YOUTUBE_API_VERSION = "v3"
 
 
 def insert_video_to_playlist(playlist_id, video_ids, logger=None):
-    if logger is not None:
-        logger.info('Now insert videos into playlist')
+    dump_log('Now insert videos into playlist', logger)
     youtube = _open_youtube_session()
 
     for video_id in video_ids:
@@ -75,13 +74,11 @@ def insert_video_to_playlist(playlist_id, video_ids, logger=None):
             )
         ).execute()
 
-    if logger is not None:
-        logger.debug(str(response))
+    dump_log(str(response), logger, 'debug')
 
 
 def make_playlist(listname, logger=None):
-    if logger is not None:
-        logger.info('Now make playlist')
+    dump_log('Now make playlist', logger)
 
     youtube = _open_youtube_session()
 
@@ -95,15 +92,13 @@ def make_playlist(listname, logger=None):
         )
     ).execute()
 
-    if logger is not None:
-        logger.debug(playlists_insert_response)
+    dump_log(playlists_insert_response, logger, 'debug')
 
     return playlists_insert_response
 
 
 def get_playlist(playlist_id, logger=None):
-    if logger is not None:
-        logger.info('Now make playlist')
+    dump_log('Now make playlist', logger)
 
     youtube = _open_youtube_session()
 
@@ -122,7 +117,7 @@ def get_playlist(playlist_id, logger=None):
             video_id = playlist_item["snippet"]["resourceId"]["videoId"]
             #vids.append(f"{i}: {title} - {video_id}")
             if video_id in vids:
-                logger.info(f'two or more {video_id} are in playlist')
+                dump_log(f'two or more {video_id} are in playlist', logger)
             else:
                 vids.append(video_id)
 
@@ -133,6 +128,8 @@ def get_playlist(playlist_id, logger=None):
 
 
 def _get_credentials():
+    dump_log('_get_credentials called', logger)
+
     flow = flow_from_clientsecrets(CLIENT_SECRETS_FILE,
                                    message=MISSING_CLIENT_SECRETS_MESSAGE,
                                    scope=YOUTUBE_READ_WRITE_SCOPE)
@@ -152,6 +149,8 @@ def _get_credentials():
 
 
 def _open_youtube_session():
+    dump_log('_open_youtube_session', logger)
+
     credentials = _get_credentials()
 
     youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
