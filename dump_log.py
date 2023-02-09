@@ -9,4 +9,3 @@ def dump_log(msg, logger=None, level='info'):
         elif level == 'error':
             logger.error(msg)
             return
-    print(msg)

@@ -124,7 +124,7 @@ def get_replies(ch, thread_ts, client, logger=None, limit=999):
     while has_more:
         res = client.conversations_replies(channel=ch, ts=thread_ts, limit=limit, cursor=cursor)
         if not res['ok']:
-            error_msg(logger, str(res), 'error')
+            dump_log(str(res), logger, 'error')
             say(msgs.fail())
             return
         else:

@@ -8,6 +8,7 @@ from slack_sdk import WebClient
 from slack_bolt import App
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 
+from dump_log import dump_log
 import msgprocessing as msgp
 import msgs
 import userprocessing as usrp
@@ -54,6 +55,8 @@ def clear_command(message, say, logger, context):
     thread head message.
     In this case, any `OPTIONS` are ignored, and remove all replies.
     '''
+
+    dump_log('clear_command called', logger)
 
     matches = context['matches'][0]
     if matches == '':
@@ -103,6 +106,7 @@ def return_joining_channels(say, logger, context):
     
     `@BOTNAME where`
     '''
+    dump_log('return_joining_channels called', logger)
 
     client = WebClient(token=slack_bot_token)
 
@@ -137,6 +141,8 @@ def read_playlist(message, say, logger, context):
     If you type this command in a thread, bot adds items to the thread.
     '''
 
+    dump_log('read_playlist called', logger)
+
     ch = message['channel']
     ts = message['ts']
     matches = context['matches'][0]
@@ -144,7 +150,7 @@ def read_playlist(message, say, logger, context):
         pl_id = matches.replace('>', '').split('=')[-1]
         vids = youtu.get_playlist(pl_id, logger)
     else:
-        logger.error('unknown playlist url')
+        dump_log('unknown playlist url', logger, 'error')
         vids = []
 
     if len(vids) > 0:
@@ -162,6 +168,8 @@ def check_duplicate(message, say, logger, context):
     If there are duplicate items in a thread, video ids and ordinal numbers of
     them are written in the thread. Then 1st items are not written.
     '''
+
+    dump_log('check_duplicate called', logger)
 
     if 'thread_ts' in message:
         ch = message['channel']
@@ -192,11 +200,13 @@ def mklist_message(message, say, logger, context):
     or `https://www.youtube.com/watch?v=VIDEO_ID`.
     '''
 
+    dump_log('mklist_message called', logger)
+
     ch = message['channel']
     ts = message['ts']
     client = WebClient(token=slack_user_token)
 
-    logger.debug(str(message))
+    dump_log(str(message), logger, 'debug')
     # say(msgs.confirm(),thread_ts=ts)
 
     if 'thread_ts' in message:
@@ -230,6 +240,8 @@ def read_slack(message, say, logger, context):
     `@BOTNAME read`
     '''
 
+    dump_log('read_slack called', logger)
+
     ch = message['channel']
     ts = message['ts']
     client = WebClient(token=slack_user_token)
@@ -239,8 +251,8 @@ def read_slack(message, say, logger, context):
     else:
         thread_ts = None
 
-    logger.info(str([ch, ts, thread_ts]))
-    logger.info(str(message))
+    dump_log(str([ch, ts, thread_ts]), logger, 'debug')
+    dump_log(str(message), logger, 'debug')
     say(str([ch, ts, thread_ts]))
     msgp.rm_history(ch, ts, client, logger)
 
@@ -251,6 +263,9 @@ def dump_users(message, say, logger, context):
     
     `@BOTNAME users`
     '''
+
+    dump_log('dump_users called', logger)
+
     client = WebClient(token=slack_bot_token)
     usrp.get_users(client, logger)
 
@@ -261,6 +276,9 @@ def send_dm(message, say, logger, context):
     
     `@BOTNAME dm`
     '''
+
+    dump_log('send_dm called', logger)
+
     user_id = message['user']
     msg = 'test message'
     client = WebClient(token=slack_user_token)
@@ -271,7 +289,7 @@ def nop(message, logger):
     '''dump debug message when any message is posted in the slack
     '''
 
-    logger.debug(str(message))
+    dump_log(f'nop called. (message)', logger)
 
 
 if __name__ == "__main__":
