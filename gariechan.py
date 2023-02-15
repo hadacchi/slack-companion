@@ -17,9 +17,9 @@ import youtu
 # set log level at main function
 # if program will be completed, change to logging.ERROR
 # when program should be debugged, change to logging.DEBUG
-logging.basicConfig(level=logging.ERROR)
+#logging.basicConfig(level=logging.ERROR)
 #logging.basicConfig(level=logging.INFO)
-#logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 
 config = toml.load(open('secret.toml'))
 
@@ -285,20 +285,35 @@ def send_dm(message, say, logger, context):
     msgp.dm_write(user_id, msg, client, logger)
 
 @app.event('message')
-def nop(message, logger):
-    '''dump debug message when any message is posted in the slack
+def message_processing(message, logger):
+    '''messageの内容に応じた処理を記述
     '''
 
-    dump_log(f'nop called. (message)', logger)
+    logger = logging.getLogger(__name__)
+
+    dump_log('message_processing is called', logger)
+
+    if 'attachments' in message:
+        # 添付ファイルつきの処理
+        dump_log(str(message['attachments']), logger, 'debug')
+
+#def nop(message, logger):
+#    '''dump debug message when any message is posted in the slack
+#    '''
+#
+#    dump_log(f'nop called. (message)', logger)
+#    dump_log(str(message), logger, 'debug')
 
 
 if __name__ == "__main__":
-    logger = logging.getLogger()
+    logger = logging.getLogger(__name__)
     # logger.setLevel(logging.INFO)
     # logger.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s %(module)s: %(levelname)s: %(message)s')
 
     # log file
     fh = logging.FileHandler('garie.log')
+    fh.setFormatter(formatter)
     logger.addHandler(fh)
 
     handler = SocketModeHandler(app, slack_app_token)
