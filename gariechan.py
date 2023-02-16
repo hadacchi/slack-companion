@@ -13,13 +13,14 @@ import msgprocessing as msgp
 import msgs
 import userprocessing as usrp
 import youtu
+import watch_list
 
 # set log level at main function
 # if program will be completed, change to logging.ERROR
 # when program should be debugged, change to logging.DEBUG
 #logging.basicConfig(level=logging.ERROR)
 #logging.basicConfig(level=logging.INFO)
-logging.basicConfig(level=logging.DEBUG)
+#logging.basicConfig(level=logging.DEBUG)
 
 config = toml.load(open('secret.toml'))
 
@@ -56,6 +57,7 @@ def clear_command(message, say, logger, context):
     In this case, any `OPTIONS` are ignored, and remove all replies.
     '''
 
+    logger = logging.getLogger(__name__)
     dump_log('clear_command called', logger)
 
     matches = context['matches'][0]
@@ -106,6 +108,8 @@ def return_joining_channels(say, logger, context):
     
     `@BOTNAME where`
     '''
+
+    logger = logging.getLogger(__name__)
     dump_log('return_joining_channels called', logger)
 
     client = WebClient(token=slack_bot_token)
@@ -124,6 +128,51 @@ def return_joining_channels(say, logger, context):
         say(msgs.noplace())
 
 
+# register watch list
+@app.message(re.compile(f'<@{bot_user_id}> *([W|w]atch)'))
+def register_this_channel(message, say, logger, context):
+    '''register watch list to sqlite3 file
+    '''
+
+    logger = logging.getLogger(__name__)
+
+    dump_log('register_this_channel called', logger)
+
+    ch = message['channel']
+    watch_list.add_watch_list(ch)
+
+    # 監視開始のメッセージを出力する
+
+
+# unregister watch list
+@app.message(re.compile(f'<@{bot_user_id}> *([U|u]nwatch)'))
+def unregister_this_channel(message, say, logger, context):
+    '''remove channel from watch list
+    '''
+
+    logger = logging.getLogger(__name__)
+
+    dump_log('unregister_this_channel called', logger)
+
+    ch = message['channel']
+    watch_list.rm_watch_list(ch)
+
+    # 監視終了のメッセージを出力する
+
+
+def clear_watch_list():
+    '''check watch list channel existance
+    '''
+
+    client = WebClient(token=slack_bot_token)
+    pass
+
+def get_watch_list():
+    '''get watch list
+    '''
+
+    pass
+
 # YouTube playlist handling
 # For this bot, a thread is a playlist and replies of the thread are playlist
 # items.
@@ -141,6 +190,7 @@ def read_playlist(message, say, logger, context):
     If you type this command in a thread, bot adds items to the thread.
     '''
 
+    logger = logging.getLogger(__name__)
     dump_log('read_playlist called', logger)
 
     ch = message['channel']
@@ -169,6 +219,7 @@ def check_duplicate(message, say, logger, context):
     them are written in the thread. Then 1st items are not written.
     '''
 
+    logger = logging.getLogger(__name__)
     dump_log('check_duplicate called', logger)
 
     if 'thread_ts' in message:
@@ -200,6 +251,7 @@ def mklist_message(message, say, logger, context):
     or `https://www.youtube.com/watch?v=VIDEO_ID`.
     '''
 
+    logger = logging.getLogger(__name__)
     dump_log('mklist_message called', logger)
 
     ch = message['channel']
@@ -229,6 +281,22 @@ def mklist_message(message, say, logger, context):
     msgp.rm_history(ch, ts, client, logger)
 
 
+# message handling
+
+@app.event('message')
+def message_processing(message, logger):
+    '''messageの内容に応じた処理を記述
+    '''
+
+    logger = logging.getLogger(__name__)
+    dump_log('message_processing is called', logger)
+
+    if 'attachments' in message:
+        # 添付ファイルつきの処理
+        dump_log(str(message), logger, 'debug')
+        #dump_log(str(message['attachments']), logger, 'debug')
+
+
 # debug
 @app.message(re.compile(f'<@{bot_user_id}> *read$'))
 def read_slack(message, say, logger, context):
@@ -240,6 +308,7 @@ def read_slack(message, say, logger, context):
     `@BOTNAME read`
     '''
 
+    logger = logging.getLogger(__name__)
     dump_log('read_slack called', logger)
 
     ch = message['channel']
@@ -264,6 +333,7 @@ def dump_users(message, say, logger, context):
     `@BOTNAME users`
     '''
 
+    logger = logging.getLogger(__name__)
     dump_log('dump_users called', logger)
 
     client = WebClient(token=slack_bot_token)
@@ -277,6 +347,7 @@ def send_dm(message, say, logger, context):
     `@BOTNAME dm`
     '''
 
+    logger = logging.getLogger(__name__)
     dump_log('send_dm called', logger)
 
     user_id = message['user']
@@ -284,37 +355,21 @@ def send_dm(message, say, logger, context):
     client = WebClient(token=slack_user_token)
     msgp.dm_write(user_id, msg, client, logger)
 
-@app.event('message')
-def message_processing(message, logger):
-    '''messageの内容に応じた処理を記述
-    '''
-
-    logger = logging.getLogger(__name__)
-
-    dump_log('message_processing is called', logger)
-
-    if 'attachments' in message:
-        # 添付ファイルつきの処理
-        dump_log(str(message['attachments']), logger, 'debug')
-
-#def nop(message, logger):
-#    '''dump debug message when any message is posted in the slack
-#    '''
-#
-#    dump_log(f'nop called. (message)', logger)
-#    dump_log(str(message), logger, 'debug')
-
 
 if __name__ == "__main__":
     logger = logging.getLogger(__name__)
-    # logger.setLevel(logging.INFO)
-    # logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
+    #logger.setLevel(logging.DEBUG)
+
     formatter = logging.Formatter('%(asctime)s %(module)s: %(levelname)s: %(message)s')
 
     # log file
     fh = logging.FileHandler('garie.log')
     fh.setFormatter(formatter)
     logger.addHandler(fh)
+
+    # watch list db file
+    watch_list = watch_list.watch_list_db(config['watch-list']['filename'], logger)
 
     handler = SocketModeHandler(app, slack_app_token)
     handler.start()
