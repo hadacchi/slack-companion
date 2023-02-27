@@ -1,1 +1,1 @@
-docker build -t gariechan:latest .
+docker build -t suichan:latest .

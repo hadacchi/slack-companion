@@ -59,12 +59,12 @@ see [command references](command_references.md) for details.
 1. bot を動作させるサーバに python と pipenv をインストールする
 2. `Pipfile` のあるディレクトリで `pipenv install` で必要なパッケージをインストール
 3. `pipenv shell` で作った環境に入る
-4. `python gariechan.py` で実行
+4. `python sui-chan.py` で実行
 5. うまく動作することを確認できたら，`tmux` を使うなりなんなりして，サーバからログアウトしても動作するようにする (なんちゃって常駐化)
 
 #### 2.2 run as docker container
 
-1. `docker build -t gariechan:latest .` などのコマンドでコンテナ作成
+1. `docker build -t suichan:latest .` などのコマンドでコンテナ作成
 2. `docker-compose up -d` で実行
 3. log は docker-compose logs で確認
 

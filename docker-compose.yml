@@ -1,11 +1,12 @@
 version: "3"
 
-# gariechan is made by following command
-# $ docker build -t gariechan:latest .
+# sui-chan is made by following command
+# $ docker build -t suichan:latest .
 
 services:
-    gariechan:
-        image: gariechan:latest
+    suichan:
+        image: suichan:latest
         tty: true
         restart: unless-stopped
-
+        volumes:
+            - ./data:/usr/src/app/data:rw

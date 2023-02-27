@@ -25,4 +25,4 @@ COPY --from=builder /usr/local/lib/python3.8/site-packages /usr/local/lib/python
 # copy script files
 COPY . ./
 
-CMD ["python", "gariechan.py"]
+CMD ["python", "sui-chan.py"]
