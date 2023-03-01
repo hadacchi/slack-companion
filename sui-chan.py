@@ -25,7 +25,6 @@ loglevel = logging.DEBUG
 #loglevel = logging.INFO
 #loglevel = logging.ERROR
 
-logfile = 'suisei.log'
 
 formatter = logging.Formatter('%(asctime)s %(module)s: %(levelname)s: %(message)s')
 
@@ -42,6 +41,8 @@ slack_bot_token = config['slackbot']['bot_user_oauth_access_token']
 data_dir_path = config['resource']['data_dir_path']
 watch_list_filename = config['resource']['watch_list_filename']
 watch_list_path = f'{data_dir_path}/{watch_list_filename}'
+log_filename = config['resource']['log_file']
+log_file_path = f'{data_dir_path}/{log_filename}'
 
 # this is keyword when this bot mentioned
 client = WebClient(token=slack_bot_token)
@@ -65,7 +66,7 @@ def logger_setup(logger):
 
     if not logger.hasHandlers():
         logger.setLevel(loglevel)
-        fh = logging.FileHandler(logfile)
+        fh = logging.FileHandler(log_file_path)
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 
@@ -367,28 +368,28 @@ def mklist_message(message, say, context):
 clear_pat = re.compile(f'<@{bot_user_id}> *clear *([^ ]*)$')
 
 # 全てのAPIを移植できたらコメントアウトを外す
-@app.event('message')
-def message_processing(message):
-    '''messageの内容に応じた処理を記述
-    '''
-
-    logger = logger_setup(logging.getLogger(__name__))
-    logger.debug('message_processing is called')
-    logger.debug(str(message))
-
-    # clear function
-
-    watch_list_ids = get_watch_list_ids()
-    if message['channel'] not in watch_list_ids:
-        return
-
-    logger.debug('this channel is monitored')
-    #logger.debug(str(message))
-
-    #if 'attachments' in message:
-    #    # 添付ファイルつきの処理
-    #    dump_log(str(message), logger, 'debug')
-    #    #dump_log(str(message['attachments']), logger, 'debug')
+#@app.event('message')
+#def message_processing(message):
+#    '''messageの内容に応じた処理を記述
+#    '''
+#
+#    logger = logger_setup(logging.getLogger(__name__))
+#    logger.debug('message_processing is called')
+#    logger.debug(str(message))
+#
+#    # clear function
+#
+#    watch_list_ids = get_watch_list_ids()
+#    if message['channel'] not in watch_list_ids:
+#        return
+#
+#    logger.debug('this channel is monitored')
+#    #logger.debug(str(message))
+#
+#    #if 'attachments' in message:
+#    #    # 添付ファイルつきの処理
+#    #    dump_log(str(message), logger, 'debug')
+#    #    #dump_log(str(message['attachments']), logger, 'debug')
 
 
 # debug

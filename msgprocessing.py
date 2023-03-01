@@ -138,7 +138,24 @@ def get_history(ch, client, say, logger=None, limit=100, cursor=None, latest='no
     ch : string
         channel id
     client : slack_sdk.WebClient
+    say : slack_sdk.Say
+    logger : logging.Logger
+    limit : int
+        max value of messages per a single request
+    cursor : string
+        this string indicate start point of history
+    latest : float or string
+        if latest is 'now', scan from the latest message
+        if latest is indicated, scan from ts <= `latest'
 
+    Return
+    ------
+    res_message : list
+        response messages from conversations_history
+    res_has_more : boolean
+        if true, there are more messages un read
+    cursor : string
+        next_cursor to scan more
     '''
 
     dump_log('get_history is called', logger, 'debug')
@@ -169,6 +186,23 @@ def get_history(ch, client, say, logger=None, limit=100, cursor=None, latest='no
 
 
 def get_message(ch, client, ts, say, logger=None, limit=1, cursor=None):
+    '''get slack messages up to `limit'
+
+    Parameters
+    ----------
+    ch : string
+        channel id
+    client : slack_sdk.WebClient
+    ts : float
+        time of the thread message
+    say : slack_sdk.Say
+    logger : logging.Logger
+    limit : int
+        max value of messages per a single request
+    cursor : string
+        this string indicate start point of history
+    '''
+
     dump_log('get_message is called', logger, 'debug')
 
     res = client.conversations_history(channel=ch, limit=limit, inclusive=True, latest=ts)
