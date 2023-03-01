@@ -63,10 +63,11 @@ def logger_setup(logger):
     logger : logging.Logger
     '''
 
-    logger.setLevel(loglevel)
-    fh = logging.FileHandler(logfile)
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
+    if not logger.hasHandlers():
+        logger.setLevel(loglevel)
+        fh = logging.FileHandler(logfile)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
 
     return logger
 
@@ -362,26 +363,32 @@ def mklist_message(message, say, context):
 
 
 # message handling
+## triggers
+clear_pat = re.compile(f'<@{bot_user_id}> *clear *([^ ]*)$')
 
-#@app.event('message')
-#def message_processing(message):
-#    '''messageの内容に応じた処理を記述
-#    '''
-#
-#    logger = logger_setup(logging.getLogger(__name__))
-#    logger.debug('message_processing is called')
-#
-#    watch_list_ids = get_watch_list_ids()
-#    if message['channel'] not in watch_list_ids:
-#        return
-#
-#    logger.debug('this channel is monitored')
-#    logger.debug(str(message))
-#
-#    #if 'attachments' in message:
-#    #    # 添付ファイルつきの処理
-#    #    dump_log(str(message), logger, 'debug')
-#    #    #dump_log(str(message['attachments']), logger, 'debug')
+# 全てのAPIを移植できたらコメントアウトを外す
+@app.event('message')
+def message_processing(message):
+    '''messageの内容に応じた処理を記述
+    '''
+
+    logger = logger_setup(logging.getLogger(__name__))
+    logger.debug('message_processing is called')
+    logger.debug(str(message))
+
+    # clear function
+
+    watch_list_ids = get_watch_list_ids()
+    if message['channel'] not in watch_list_ids:
+        return
+
+    logger.debug('this channel is monitored')
+    #logger.debug(str(message))
+
+    #if 'attachments' in message:
+    #    # 添付ファイルつきの処理
+    #    dump_log(str(message), logger, 'debug')
+    #    #dump_log(str(message['attachments']), logger, 'debug')
 
 
 # debug
