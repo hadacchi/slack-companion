@@ -5,6 +5,7 @@ import re
 import logging
 
 import msgs
+import mylogger
 from dump_log import dump_log
 
 urlpat = re.compile('https?://[^\s>]+')
@@ -158,7 +159,10 @@ def get_history(ch, client, say, logger=None, limit=100, cursor=None, latest='no
         next_cursor to scan more
     '''
 
-    dump_log('get_history is called', logger, 'debug')
+    if logger is None:
+        logger = mylogger.logger_setup(logging.getLogger(__name__))
+    logger.debug('get_history is called')
+    #dump_log('get_history is called', logger, 'debug')
 
     if latest == 'now':
         res = client.conversations_history(

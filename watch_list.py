@@ -42,7 +42,7 @@ class watch_list_db():
             _ch_name    TEXT,     -- CHannel Name on slack
             PRIMARY KEY (_ch_id)
         );
-'''
+        '''
         self._insert_sql = f'INSERT INTO {self.TBL_NAME} VALUES (?, ?)'
         self._remove_sql = f"DELETE FROM {self.TBL_NAME} WHERE _ch_id='{{0}}'"
         self._select_sql = f'SELECT * FROM {self.TBL_NAME}'

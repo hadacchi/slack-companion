@@ -17,6 +17,10 @@ NOTIFY_MSGS = ['なんか，ゆってるよ？',
                ]
 WAITING_MSGS = ['なになになに〜？',
                 ]
+WATCH_MSGS = ['じー',
+              ]
+UNWATCH_MSGS = ['ぷーい',
+              ]
 ERROR_MSGS = ['は？ そんなん知らねーんだけど',
         ]
 IMIN_MSGS = ['ん？ あたしが見てるのは\n{0}\nだよ',
@@ -25,6 +29,16 @@ NOPLACE_MSGS = ['すいちゃん，居場所ねーんだけど？'
                 ]
 DUP_MSGS = ['ねぇねぇねぇ\nこいつらダブってんだけど？\n{0}'
             ]
+DBG_MSGS = ['{0} received'
+            ]
+
+
+def watch():
+    return random.choice(WATCH_MSGS)
+
+
+def unwatch():
+    return random.choice(UNWATCH_MSGS)
 
 
 def confirm():
@@ -57,3 +71,7 @@ def noplace():
 
 def dup():
     return random.choice(DUP_MSGS)
+
+
+def dbgreply():
+    return random.choice(DBG_MSGS)
