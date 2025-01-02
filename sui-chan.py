@@ -1,3 +1,4 @@
+from as_control.airstation import AirStationWebsite
 import os
 import os.path
 import time
@@ -34,10 +35,19 @@ Example:
                           n    --  remove n messages in the channel
                     watch  --  add this channel into watch list
                     unwatch  --  remove this channel from unwatch list
-    #BOTNAME youtube  --  youtube domain
+    @BOTNAME youtube  --  youtube domain
                      pick  --  dump playlist into reply
                      playlist  --  make playlist from reply
                      check  --  check dupplicate video in the playlist
+    @BOTNAME ap    --  AirStation
+                    add  --  add device to whitelist
+                            devicename  --  name registered to kids filter list
+                    del  --  add device from whitelist
+                            devicename
+                    addmac  --  add device mac address to whitelist
+                            devicemac  --  device mac address
+                    delmac  --  del device mac address from whitelist
+                            devicemac  --  device mac address
 
 dm  --  send dm
 users  --  output user names
@@ -81,12 +91,13 @@ client = WebClient(token=slack_bot_token)
 bot_user_id = client.auth_test()['user_id']
 del client
 
+ap_config_file = config['ap']['config_file']
 
 #############
 # functions #
 #############
 
-splitter = re.compile('\s+')
+splitter = re.compile(r'\s+')
 
 app = App(token=slack_bot_token)
 
@@ -279,6 +290,68 @@ def return_joining_channels(say, context, message):
             say(msgs.noplace())
 
 
+### ap control functions ###
+@app.message(re.compile(f'<@{bot_user_id}> *ap *(.*)$'))
+def ap_ctl_command(message, say, context):
+    '''del DEVNAME, add DEVNAME, delmac MACADDR, addmac MACADDR
+    '''
+
+    logger = mylogger.logger_setup(logging.getLogger(__name__), loglevel)
+
+    if 'matches' not in context:
+        logger.debug(context)
+        say(msgs.noch())
+        return
+
+    say(msgs.confirm())
+    logger.debug(context['matches'])
+    match = context['matches'][0]
+    attrs = splitter.split(match)
+    if len(attrs) <=1:
+        say(msgs.error())
+        return
+
+    if match.find('delmac') >= 0:
+        # del macaddr
+        ASsite = AirStationWebsite(ap_config_file)
+        try:
+            if ASsite.del_mac_addr(attrs[1]):
+                say(msgs.finish())
+        except Exception as e:
+            say(str(e))
+        ASsite.exit()
+    elif match.find('addmac') >= 0:
+        # add macaddr
+        ASsite = AirStationWebsite(ap_config_file)
+        try:
+            if ASsite.add_mac_addr(attrs[1]):
+                say(msgs.finish())
+        except Exception as e:
+            say(str(e))
+        ASsite.exit()
+    elif match.find('del') >= 0:
+        # del device
+        ASsite = AirStationWebsite(ap_config_file)
+        try:
+            if ASsite.del_device(' '.join(attrs[1:])):
+                say(msgs.finish())
+        except Exception as e:
+            say(str(e))
+        ASsite.exit()
+    elif match.find('add') >= 0:
+        # add device
+        ASsite = AirStationWebsite(ap_config_file)
+        try:
+            if ASsite.add_device(' '.join(attrs[1:])):
+                say(msgs.finish())
+        except Exception as e:
+            say(str(e))
+        ASsite.exit()
+    else:
+        say('WARN: unknown subcommand, ' + ','.join(attrs))
+        logger.warning('unknown subcommand, ' + ','.join(attrs))
+
+
 ### slack functions ###
 
 # slack message control
@@ -315,7 +388,7 @@ def slack_command(message, say, context):
         logger.debug('subcommand is unwatch, ' + ','.join(attrs))
         unregister_this_channel(message, say, logger)
     else:
-        logger.debug('unknown subcommand, ' + ','.joi(attrs))
+        logger.debug('unknown subcommand, ' + ','.join(attrs))
 
 
 def clear_command(message, say, attrs, logger):

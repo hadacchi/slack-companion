@@ -8,7 +8,7 @@ import msgs
 import mylogger
 from dump_log import dump_log
 
-urlpat = re.compile('https?://[^\s>]+')
+urlpat = re.compile(r'https?://[^\s>]+')
 
 def get_video_ids_from_replies(ch, ts, client, logger=None):
     '''read url from replies of the thread where suichan called

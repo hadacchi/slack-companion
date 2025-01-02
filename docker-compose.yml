@@ -10,3 +10,11 @@ services:
         restart: unless-stopped
         volumes:
             - ./data:/usr/src/app/data:rw
+        environment:
+            SELENIUM_URL: http://chrome:4444/wd/hub
+    chrome:
+        image: selenium/standalone-chrome:131.0-chromedriver-131.0
+        ports:
+            - 4444:4444
+        #environment:
+        #    SE_START_VNC: false  # なぜかエラーになるのでVNCを消せない
