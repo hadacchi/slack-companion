@@ -1,1 +1,1 @@
-docker build -t suichan:latest .
+docker build -t allora:latest .
