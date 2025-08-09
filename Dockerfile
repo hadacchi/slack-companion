@@ -9,8 +9,8 @@ WORKDIR /usr/src/app
 #COPY Pipfile Pipfile.lock /usr/src/app/
 #RUN pip install pipenv \
 #    && pipenv install --system
-COPY requirement.txt /usr/src/app/
-RUN pip install -r requirement.txt
+COPY requirements.txt /usr/src/app/
+RUN pip install -r requirements.txt
 
 # this is produce environment
 # to decrease container size, use slim image
@@ -29,4 +29,4 @@ COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/pytho
 # copy script files
 COPY . ./
 
-CMD ["python", "allora.py"]
+CMD ["python", "main.py"]

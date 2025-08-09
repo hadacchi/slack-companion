@@ -1,0 +1,3 @@
+[submodule "plugins/as_control"]
+	path = plugins/as_control
+	url = git@github.com:hadacchi/as_control.git

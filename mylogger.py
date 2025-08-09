@@ -7,25 +7,20 @@ config = toml.load(open('secret.toml'))
 data_dir_path = config['resource']['data_dir_path']
 log_filename = config['resource']['log_file']
 log_file_path = f'{data_dir_path}/{log_filename}'
-
-formatter = logging.Formatter('%(asctime)s %(module)s: %(levelname)s: %(message)s')
-
-def logger_setup(logger, loglevel=logging.ERROR):
-    '''set parameters into logger
+ 
+def setup_logging(loglevel=logging.INFO):
+    '''アプリケーション全体のロギングを設定する
 
     Parameters
     ----------
-    logger : logging.Logger
-
-    Return
-    ------
-    logger : logging.Logger
+    loglevel : int
+        設定するログレベル
     '''
-
-    if not logger.hasHandlers():
-        logger.setLevel(loglevel)
-        fh = logging.FileHandler(log_file_path)
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
-
-    return logger
+    logging.basicConfig(
+        level=loglevel,
+        format='%(asctime)s %(name)s: %(levelname)s: %(message)s',
+        filename=log_file_path,
+        filemode='a' # 追記モード
+    )
+    # slack-boltのログがたくさん出ちゃうのを抑えるおまじない！
+    logging.getLogger("slack_bolt.App").setLevel(logging.WARNING)
