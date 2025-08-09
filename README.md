@@ -4,121 +4,82 @@ slack上のメッセージを見て，コマンドを解釈し，実行するbot
 
 ## How to Use
 
-see [command references](command_references.md) for details.
+see [commands](commands.md) for details.
 
-1. `@BOTNAME clear 10` で発言した channel の発言を最新10件削除
-1. `@BOTNAME clear all` で発言した channel の発言を全件削除
-1. `@BOTNAME where` で BOT の参加する channel list を返却
-1. youtube のプレイリストの自動作成
-    1. botの参加するchで，作成したいプレイリスト名を入れて発言
-    1. プレイリスト名のスレッドに返信でyoutubeの動画URLを発言
-        - 1発言に1URL，他に余分な文字列はつけないこと
-        - 短縮URL youtu.be もOK
-    1. プレイリストに入れたいURLを全て発言し終えたら，`@BOTNAME playlist` と発言すると完成
-    1. 重複チェックしたい時は `@BOTNAME check`
+1. `@BOTNAME slack clear 10` で発言した channel の発言を最新10件削除
+1. `@BOTNAME slack clear all` で発言した channel の発言を全件削除
+1. `@BOTNAME slack where` で BOT の参加する channel list を返却
 
 ## Installation
 
-### 1. slack アプリの作成
+### 1. Create a Slack App
 
-アプリをインストールしたいslackのワークスペースに接続したセッションで https://api.slack.com/apps へアクセス
+First, you need to create a Slack app and configure it with the necessary permissions.
 
-1. Create New App  
-   App Name は好きなおにゃの子の名前でも入れとけ  
-   Development Slack Workspace はアプリ開発用 Workspace の設定だが，インストールしたい Workspace を入れておけばOK
-1. Settings -> Socket Mode でソケットモードを有効化  
-   Enable Socket Mode を ON  
-   Token Name は何でもいい  
-   Scope は `connections:write` だけあればOK  
-   Generate する
-1. 表示された Token は，`secret.toml` の `token` に設定  
-   bot の SocketModeHandler が slack にアクセスする際に使用
-1. Features -> Event Subscriptions で Events を使えるようにする  
-   Enable Events を ON
-    1. Add Bot User Event で `message.channels` を追加  
-       channel 内の message event を受け取るため
-1. Features -> OAuth & Permissions で Scope を設定  
-   User OAuth Token を `secret.toml` の `user_oauth_access_token` に設定  
-   Bot User OAuth Token を `secret.toml` の `bot_user_oauth_access_token` に設定  
-   前者は，あなたの権限で処理する場合に使用 (bot 以外の書き込みの削除)  
-   後者は，bot の権限で十分な処理の場合に使用 (参加 channel の history 取得など)
-    1. Redirect URLs は有効な自分で持っているURLを記入しておく  
-       Add to Slack ボタンを使わないので，実際には不要
-    1. Bot Token Scopes も，User Token Scopes も，`channels:history`, `channels:read`, `chat:write` をつけておく  
-       bot の権限で履歴取得と結果を示す発言の書き込みをする  
-       user の権限で任意の書き込みを削除する．
-1. Settings -> Install App でアプリをインストール  
-   workspaceにアカウント追加するだけ．プログラムは自分のサーバで実行させる必要あり．
-1. Settings -> Basic Information でアプリの動作するアカウントの名前とかアイコンを
-   設定する．  
-   好みの見た目にしとけ．
+1.  **Go to https://api.slack.com/apps** and click "Create New App".
+    *   Choose an **App Name** and select the **Development Slack Workspace**. You can name your bot whatever you like!
+2.  **Enable Socket Mode**: Go to **Settings > Socket Mode**, enable it, and generate an app-level token with the `connections:write` scope. Copy this token.
+3.  **Set OAuth & Permissions**: Go to **Features > OAuth & Permissions**.
+    *   Add the following **Bot Token Scopes**:
+        *   `channels:history`
+        *   `channels:read`
+        *   `chat:write`
+    *   Add the same scopes to **User Token Scopes**.
+4.  **Subscribe to Bot Events**: Go to **Features > Event Subscriptions**, enable it, and add the `message.channels` bot event.
+5.  **Install App**: Go to **Settings > Install App** and install the app to your workspace.
+6.  **Get Tokens**: After installation, go back to **Features > OAuth & Permissions** to get your tokens.
+    *   **Bot User OAuth Token** (starts with `xoxb-`)
+    *   **User OAuth Token** (starts with `xoxp-`)
+7.  **Customize Display**: Go to **Settings > Basic Information** to set a custom name and icon for your bot.
 
-### 2. slack アプリのデプロイ
-#### 2.1 run with python command
+Finally, create a `secret.toml` file in the project's root directory and add the tokens you've collected.
 
-1. bot を動作させるサーバに python と pipenv をインストールする
-2. `Pipfile` のあるディレクトリで `pipenv install` で必要なパッケージをインストール
-3. `pipenv shell` で作った環境に入る
-4. `python sui-chan.py` で実行
-5. うまく動作することを確認できたら，`tmux` を使うなりなんなりして，サーバからログアウトしても動作するようにする (なんちゃって常駐化)
+```toml
+[slackbot]
+# App-Level Token for Socket Mode (starts with xapp-)
+token = "YOUR_APP_LEVEL_TOKEN"
+# User OAuth Token (starts with xoxp-)
+user_oauth_access_token = "YOUR_USER_OAUTH_TOKEN"
+# Bot User OAuth Token (starts with xoxb-)
+bot_user_oauth_access_token = "YOUR_BOT_OAUTH_TOKEN"
+```
 
-#### 2.2 run as docker container
+### 2. Deploy the Bot
 
-1. `docker build -t suichan:latest .` などのコマンドでコンテナ作成
-2. `docker-compose up -d` で実行
-3. log は docker-compose logs で確認
+This bot is designed to be run using Docker and Docker Compose.
 
-### 3. bot を動作させたい channel に参加/除名させる
+#### 2.1. Build the Docker Image
 
-1. slack のワークスペースに接続して，参加させたい ch で `/invite @BOTNAME` の形式で BOT の名前を入れたらOK  
-   除名させたい場合は，その ch で `/kick @BOTNAME`
-2. 動作確認
-    1. bot を追加したchannel で `@BOTNAME clear 1` と発言する
-    2. bot が応答メッセージを発言したあと，`@BOTNAME clear 1` の発言だけ削除して，bot が完了メッセージを発言する
-    3. 以上の動作を確認できれば完了  
-       だめなら頑張れ
+Build the Docker image for the bot. We'll tag it as `slack-companion:latest`.
 
-### 4. youtube Data API v3 クライアントの作成
+```bash
+docker build -t slack-companion:latest .
+```
 
-#### 4.1 GCP のアカウント・プロジェクトの作成
+#### 2.2. Run the Bot
 
-GCPアカウント・プロジェクトは既にあるものとする．
+With the `docker-compose.yml` file updated, start the services in detached mode.
 
-#### 4.2 Youtube Data API v3 の OAuth クライアント ID を作成するための OAuth 同意画面の作成
+```bash
+docker-compose up -d
+```
 
-1. GCPのプロジェクト内で「Youtube Data API」を検索し，有効化されてなければ有効化する
-1. YouTube Data API v3の管理画面の左のメニューから「認証情報」を選択
-1. 認証情報を作成
-    - OAuthクライアントIDを選択
-    - 画面に従って進めようとすると同意画面の作成をさせられるので，画面に従って作成
-    - User Type は外部
-    - スコープの設定は不要
-    - テストユーザーには操作したいYoutubeアカウントにしているgoogleアカウントを設定
-1. 保存して次へ
+#### 2.3. Check Logs
 
-#### 4.3 Youtube Data API v3 の OAuth クライアント ID の作成
+You can follow the bot's logs to ensure it's running correctly.
 
-1. 再度，YouTube Data API v3の管理画面の左のメニューから「認証情報」を選択
-1. 認証情報を作成
-    - OAuthクライアントIDを選択
-    - デスクトップアプリを選択し名前をつける
-
-#### 4.4 Youtube Data API v3 の OAuth クライアント ID と クライアントシークレット の JSON を保存
-
-1. OAuthクライアントIDを作成した画面または認証情報の画面から，JSONをダウンロード
-1. 適当な名前にリネームしファイルを保存
-
-#### 4.5 secret.toml の youtube-client テーブルのファイル名を指定
-
-1. 設定したファイル名を secret.toml の youtube-client の CLIENT_SECRET_FILE へ指定
-1. OAUTH_TOKEN_JSON は，適当なJSONファイル名を指定 (ファイルはなくても良い)
-
-#### 4.6 OAuth トークンの取得
-
-1. `python youtu.py` を実行し，画面に従ってOAuth認証を完了させる
+```bash
+docker-compose logs -f slack-companion
+```
 
 
-### 5. ログレベル
+### 3. Add/Remove the Bot from Channels
+
+1. **Invite**: In the channel where you want the bot to operate, type `/invite @BOTNAME` (replace `BOTNAME` with your bot's actual name).
+2. **Remove**: To remove the bot from a channel, type `/kick @BOTNAME`.
+3. **Verify**: Test the bot by sending a command like `@BOTNAME slack where`. If it responds with a list of channels it's in, the setup is successful.
+
+### 4. ログレベル
 
 | log level | description                                |
 |-----------|--------------------------------------------|
@@ -152,4 +113,3 @@ issue へ記述。
 ## 注意
 
 - このスクリプトは発言者の権限を確認しないので，勝手に発言を消されて困る channel には追加しないこと
-

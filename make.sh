@@ -1,1 +1,1 @@
-docker build -t allora:latest .
+docker build -t allora:2.0.0 .
