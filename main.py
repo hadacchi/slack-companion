@@ -53,7 +53,7 @@ bot_user_id = client.auth_test()['user_id']
 del client
 
 # loggerのセットアップは起動時に一度だけ行う
-mylogger.setup_logging(logging.DEBUG)  # DEBUG, INFO, ERROR
+mylogger.setup_logging(logging.INFO)  # DEBUG, INFO, ERROR
 logger = logging.getLogger(__name__)
 
 ####################

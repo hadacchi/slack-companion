@@ -2,6 +2,18 @@ import logging
 import toml
 from plugins.as_control.airstation import AirStationWebsite
 
+'''
+ap.py is a plugin to control device MAC address authentication on AirStation.
+
+This plugin needs hadacchi/as_control.
+
+Usage:
+    @BOTNAME ap SUBCOMMAND [OPTION]
+
+Example:
+    @BOTNAME ap devices
+'''
+
 logger = logging.getLogger(__name__)
 
 SUBCOMMANDS = ['devices', 'del', 'add', 'delmac', 'addmac']
