@@ -5,6 +5,8 @@ import toml
 import logging
 import re
 import importlib
+import pathlib
+import pkgutil
 #import tracemalloc
 
 from slack_sdk import WebClient
@@ -14,10 +16,6 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 import mylogger
 import msgprocessing as msgp
 import msgs_allora as msgs
-
-# plugins
-## 思ったより専有メモリが小さいので，ずっとインポートしておく
-import plugins.ap as ap
 
 '''slack bot
 
@@ -55,6 +53,37 @@ del client
 # loggerのセットアップは起動時に一度だけ行う
 mylogger.setup_logging(logging.INFO)  # DEBUG, INFO, ERROR
 logger = logging.getLogger(__name__)
+
+################
+# load plugins #
+################
+
+plugin_dir = pathlib.Path(config['resource']['plugin_dir_path'])
+
+def load_all_plugins():
+    """
+    pluginsフォルダ内の全てのパッケージを読み込み、リストで返す
+    """
+    loaded_plugins = {}
+
+    # pkgutil.iter_modulesを使って、プラグインディレクトリ内のモジュールを探索
+    for finder, name, ispkg in pkgutil.iter_modules([plugin_dir]):
+        # ispkgがTrueなら、それはパッケージ（ディレクトリ）
+        if ispkg:
+            # パッケージ名とモジュール名を結合して完全なパスを作成
+            module_name = '.'.join(plugin_dir.joinpath(name).parts)
+            logger.info(f"プラグイン '{module_name}' を読み込み中...")
+
+            try:
+                # importlib.import_module()でモジュールを動的にインポート
+                loaded_plugins[name] = importlib.import_module(module_name)
+                logger.info(f"プラグイン '{name}' の読み込みに成功しました。")
+
+            except Exception as e:
+                logger.error(f"エラー: プラグイン '{name}' の読み込みに失敗しました: {e}")
+
+    return loaded_plugins
+
 
 ####################
 # common functions #
@@ -178,7 +207,7 @@ def clear_command(message, say, attrs):
         say(msgs.finish())
 
 # slack command control
-@app.message(re.compile(f'<@{bot_user_id}> *slack *(.*)$'))
+@app.message(re.compile(rf'<@{bot_user_id}>\s*slack\s*(.*)$'))
 def handle_slack_command(message, say, context):
     '''parse slack command
     '''
@@ -210,10 +239,12 @@ def handle_slack_command(message, say, context):
 def execute_plugins(plugin_name, attrs, say, config):
     try:
         # インポートしたモジュール内の 'run' 関数を呼び出す
-        result = ap.run(attrs, say, config)
+        result = plugins[plugin_name].run(attrs, say, config)
         logger.info(f"コマンド '{plugin_name}' の実行結果: {result}")
         return True
-        
+    except KeyError:
+        logger.error(f"エラー: コマンド '{plugin_name}' がありません．")
+        say(msgs.error())
     except ModuleNotFoundError:
         logger.error(f"エラー: コマンド '{plugin_name}' が見つかりませんでした。")
         say(msgs.error())
@@ -222,7 +253,7 @@ def execute_plugins(plugin_name, attrs, say, config):
         say(msgs.error())
     return False
 
-@app.message(re.compile(f'<@{bot_user_id}>\s+(.*)'))
+@app.message(re.compile(rf'<@{bot_user_id}>\s+(.*)'))
 def dispatch_command(message, say, context):
     '''組み込み以外のコマンドをディスパッチするよ！
     コマンドはpluginsディレクトリにコードが用意されていれば、動的に読み込んで動作するよ！
@@ -259,5 +290,16 @@ def dispatch_command(message, say, context):
 
 if __name__ == "__main__":
     logger.info("アローラ、起動するよー！")
+
+    logger.info("プラグインを検索・読み込みします。")
+    plugins = load_all_plugins()
+
+    if plugins:
+        logger.info("--- 読み込まれたプラグイン ---")
+        for plugin in plugins.keys():
+            logger.info(f"プラグイン名: {plugin}")
+    else:
+        logger.info("プラグインは見つかりませんでした。")
+
     handler = SocketModeHandler(app, slack_app_token)
     handler.start()
