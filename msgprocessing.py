@@ -4,7 +4,7 @@ import urllib.parse
 import re
 import logging
 
-import msgs
+import msgs_allora
 import mylogger
 from dump_log import dump_log
 

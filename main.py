@@ -84,7 +84,6 @@ def load_all_plugins():
 
     return loaded_plugins
 
-
 ####################
 # common functions #
 ####################
@@ -241,6 +240,7 @@ def execute_plugins(plugin_name, attrs, say, config):
         # インポートしたモジュール内の 'run' 関数を呼び出す
         result = plugins[plugin_name].run(attrs, say, config)
         logger.info(f"コマンド '{plugin_name}' の実行結果: {result}")
+        say(msgs.finish())
         return True
     except KeyError:
         logger.error(f"エラー: コマンド '{plugin_name}' がありません．")
@@ -248,8 +248,9 @@ def execute_plugins(plugin_name, attrs, say, config):
     except ModuleNotFoundError:
         logger.error(f"エラー: コマンド '{plugin_name}' が見つかりませんでした。")
         say(msgs.error())
-    except AttributeError:
+    except AttributeError as e:
         logger.error(f"エラー: コマンド '{plugin_name}' に 'run' 関数がありません。")
+        say(f'{e}')
         say(msgs.error())
     return False
 
@@ -280,7 +281,7 @@ def dispatch_command(message, say, context):
     # attrs includes no COMMAND but SUBCOMMAND and OPTIONs
     attrs = None if len(matches) == 1 else matches[1:]
 
-    if not execute_plugins(command, attrs, say, config[command]):
+    if not execute_plugins(command, attrs, say, os.path.join(plugin_dir, f'{command}_config.toml')):
 
         # debug
         say(f'command={command}\n' + f'matches={matches}')

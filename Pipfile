@@ -26,6 +26,7 @@ toml = "*"
 logging = "*"
 slack-bolt = "*"
 slack-sdk = "*"
+peewee = "*"
 
 [dev-packages]
 pytest = "*"
