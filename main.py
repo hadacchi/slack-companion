@@ -7,6 +7,7 @@ import re
 import importlib
 import pathlib
 import pkgutil
+from apscheduler.schedulers.background import BackgroundScheduler
 #import tracemalloc
 
 from slack_sdk import WebClient
@@ -22,12 +23,19 @@ import msgs_allora as msgs
 Usage:
     @BOTNAME COMMAND [SUBCOMMAND] [OPTION]
 
-Example:
+Embeded commands:
     @BOTNAME slack  --  slack domain
                     clear  --  remove message in the channel
                           all  --  remove all messages in the channel
                           n    --  remove n messages in the channel
                     where  --  output all channel names where BOT joins
+    @BOTNAME cron   --  schedules a command for routine execution
+                    daily   --  run daily
+                    weekly  --  run weekly
+
+Example:
+    @BOTNAME slack clear all
+    @BOTNAME slack cron daily slack clear all
 '''
 
 ##################
@@ -230,6 +238,34 @@ def handle_slack_command(message, say, context):
     else:
         logger.warning('unknown subcommand, ' + ','.join(attrs))
         say(msgs.error())
+
+########
+# cron #
+########
+
+# run
+def daily_job():
+    logger.info('scan and run daily tasks')
+    # ここに Bot がやる処理を書く
+    app.client.chat_postMessage(channel="#general", text="Just now, daily tasks have been executed.")
+
+# manage routine tasks
+@app.message(re.compile(rf'<@{bot_user_id}>\s*cron\s*(.*)$'))
+def handle_cron_command(message, say, context):
+    '''add tasks to cron.d/daily or cron.d/weekly
+    '''
+    pass
+
+# APScheduler を設定
+scheduler = BackgroundScheduler()
+
+# 毎日特定の時間に実行する例 (例: 午前9時30分)
+scheduler.add_job(daily_job, 'cron', hour=2, minute=10)
+# または、インターバルで実行する例 (例: 10分ごと)
+# scheduler.add_job(scheduled_job, 'interval', minutes=10)
+
+# スケジューラーを開始
+scheduler.start()
 
 ##################
 # import plugins #
