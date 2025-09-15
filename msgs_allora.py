@@ -53,6 +53,18 @@ NOPLACE_MSGS = [
     "しーん…あたし、どこにいるんだろう？(；´∀｀)"
 ]
 
+DAILY_TASK_FINISH_MSGS = [
+    "今日のデイリータスク、全部終わらせたよ！えっへん！✨",
+    "定時連絡だよー！今日のタスクもばっちり完了！👍",
+    "やっほー！日課のタスク、さっき終わったから報告しとくね！"
+]
+
+WEEKLY_TASK_FINISH_MSGS = [
+    "今週のウィークリータスク、全部終わらせたよ！すごいでしょ！✨",
+    "週次連絡だよー！今週のタスクもばっちり完了！👍",
+    "やっほー！週課のタスク、さっき終わったから報告しとくね！"
+]
+
 def confirm():
     return random.choice(CONFIRM_MSGS)
 
@@ -70,3 +82,9 @@ def imin():
 
 def noplace():
     return random.choice(NOPLACE_MSGS)
+
+def daily_task_finish():
+    return random.choice(DAILY_TASK_FINISH_MSGS)
+
+def weekly_task_finish():
+    return random.choice(WEEKLY_TASK_FINISH_MSGS)
