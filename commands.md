@@ -35,13 +35,22 @@ This command deletes the 10 most recent messages.
 
 ---
 
-## Home AP Commands (`ap`)
+## Cron Commands (`cron`)
 
-### List registered devices (`devices`)
-`@BOTNAME ap devices`
+Schedules a command for routine execution.
 
-### Add a device (`add`)
-`@BOTNAME ap add <device_name>`
+### Add a job (`daily` or `weekly`)
 
-### Remove a device (`del`)
-`@BOTNAME ap del <device_name>`
+`@BOTNAME cron [daily|weekly] <command_to_schedule>`
+
+Schedules a command to be executed daily or weekly. The command will be executed in the channel where this scheduling command is issued.
+
+**Example:**
+`@BOTNAME cron daily slack clear all`
+This command schedules `@BOTNAME slack clear all` to be run daily.
+
+### List jobs (`list`)
+
+`@BOTNAME cron list`
+
+Lists all registered daily and weekly jobs.
