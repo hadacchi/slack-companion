@@ -131,7 +131,7 @@ def clear_history(ch, msg_list, client, logger=None):
     dump_log(f'{i+1} messages were deleted', logger)
 
 
-def get_history(ch, client, say, logger=None, limit=100, cursor=None, latest='now'):
+def get_history(ch, client, say=None, logger=None, limit=100, cursor=None, latest='now'):
     '''get channel history
 
     Parameters
@@ -164,24 +164,22 @@ def get_history(ch, client, say, logger=None, limit=100, cursor=None, latest='no
     logger.debug('get_history is called')
     #dump_log('get_history is called', logger, 'debug')
 
-    if latest == 'now':
-        res = client.conversations_history(
-                channel=ch,
-                limit=limit,
-                inclusive=True,
-                cursor=cursor
-        )
-    else:
-        res = client.conversations_history(
-                channel=ch,
-                limit=limit,
-                inclusive=True,
-                latest=latest
-        )
+    params = {
+        'channel': ch,
+        'limit': limit,
+        'inclusive': True,
+    }
+    if cursor:
+        params['cursor'] = cursor
+    if latest != 'now':
+        params['latest'] = latest
+
+    res = client.conversations_history(**params)
     if not res['ok']:
         dump_log(str(res), logger, 'error')
-        say(msgs.fail())
-        return [], False
+        if say:
+            say(msgs.fail())
+        return [], False, None
     else:
         dump_log(f"get {len(res['messages'])} messages", logger)
         cursor = res['response_metadata']['next_cursor'] \
@@ -264,4 +262,3 @@ def dm_write(user_id, msg, client, logger=None):
     dm_id = res['channel']['id']
 
     client.chat_postMessage(channel=dm_id, text=msg)
-

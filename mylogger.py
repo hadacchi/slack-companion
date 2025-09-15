@@ -2,7 +2,7 @@ import logging
 import toml
 
 # load config file
-config = toml.load(open('secret.toml'))
+config = toml.load('secret.toml')
 
 data_dir_path = config['resource']['data_dir_path']
 log_filename = config['resource']['log_file']
