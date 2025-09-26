@@ -552,7 +552,7 @@ scheduler = BackgroundScheduler(timezone=ZoneInfo("Asia/Tokyo"))
 # 毎日特定の時間に実行する例 (例: 午前2時10分)
 scheduler.add_job(daily_job, 'cron', hour=2, minute=10)
 # 毎週月曜日の午前2時20分に実行する例
-scheduler.add_job(weekly_job, 'cron', day_of_week='mon', hour=2, minute=20)
+scheduler.add_job(weekly_job, 'cron', day_of_week='sat', hour=2, minute=20)
 # または、インターバルで実行する例 (例: 10分ごと)
 # scheduler.add_job(scheduled_job, 'interval', minutes=10)
 
